@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import AppKit
 
 typealias Action = () -> Void
 
@@ -7,6 +8,19 @@ class Actions {
     static func logEvent(_ message: String) {
         let timestamp = Date().formatted(date: .omitted, time: .standard)
         print("[\(timestamp)] ACTION: \(message)")
+    }
+
+    // Get info about the active application
+    static func getActiveAppBundleId() -> String? {
+        NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+    }
+
+    static func getActiveAppName() -> String? {
+        NSWorkspace.shared.frontmostApplication?.localizedName
+    }
+
+    static func isActiveApp(_ bundleId: String) -> Bool {
+        getActiveAppBundleId()?.contains(bundleId) ?? false
     }
 
     static func osascriptKey(_ keyCombo: String) {

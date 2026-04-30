@@ -8,8 +8,18 @@ enum ControllerInput: Hashable {
 }
 
 var buttonMapping: [ControllerInput: Action] = [
-    // Buttons
-    .button("Square"):   { Actions.logEvent("Square pressed") },
+    // Buttons - example with context-aware actions
+    .button("Square"): {
+        if Actions.isActiveApp("Safari") {
+            Actions.logEvent("Safari: Opening new tab")
+            Actions.systemCommand("open 'javascript:void(0)'")  // Example
+        } else if Actions.isActiveApp("Chrome") {
+            Actions.logEvent("Chrome: Opening new tab")
+        } else {
+            Actions.logEvent("Square pressed in \(Actions.getActiveAppName() ?? "unknown app")")
+        }
+    },
+
     .button("X"):        { Actions.logEvent("X pressed") },
     .button("Circle"):   { Actions.logEvent("Circle pressed") },
     .button("Triangle"): { Actions.logEvent("Triangle pressed") },
