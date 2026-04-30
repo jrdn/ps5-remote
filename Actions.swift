@@ -92,27 +92,27 @@ class Actions {
     }
 
     static func shiftArrowUp() {
-        logEvent("Shift+Up")
+        logEvent("\(getActiveAppName() ?? "unknown"): Shift+Up")
         sendKeyWithModifier(126, modifier: "shift")  // Up arrow = 126
     }
 
     static func shiftArrowDown() {
-        logEvent("Shift+Down")
+        logEvent("\(getActiveAppName() ?? "unknown"): Shift+Down")
         sendKeyWithModifier(125, modifier: "shift")  // Down arrow = 125
     }
 
     static func shiftArrowLeft() {
-        logEvent("Shift+Left")
+        logEvent("\(getActiveAppName() ?? "unknown"): Shift+Left")
         sendKeyWithModifier(123, modifier: "shift")  // Left arrow = 123
     }
 
     static func shiftArrowRight() {
-        logEvent("Shift+Right")
+        logEvent("\(getActiveAppName() ?? "unknown"): Shift+Right")
         sendKeyWithModifier(124, modifier: "shift")  // Right arrow = 124
     }
 
     static func controlTab() {
-        logEvent("Control+Tab")
+        logEvent("\(getActiveAppName() ?? "unknown"): Control+Tab")
         let script = """
         tell application "System Events"
             key code 48 using control down
@@ -122,7 +122,7 @@ class Actions {
     }
 
     static func controlShiftTab() {
-        logEvent("Control+Shift+Tab")
+        logEvent("\(getActiveAppName() ?? "unknown"): Control+Shift+Tab")
         let script = """
         tell application "System Events"
             key code 48 using {control down, shift down}
