@@ -59,10 +59,10 @@ class Actions {
     }
 
     static func toggleMissionControl() {
-        logEvent("Toggling Mission Control (Cmd+F3)")
+        logEvent("Toggling Mission Control")
         let script = """
-        tell application "System Events"
-            key code 99 using command down
+        tell application "Mission Control"
+            activate
         end tell
         """
         runAppleScript(script)
