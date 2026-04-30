@@ -74,11 +74,49 @@ class PS5Controller {
     private var lastLeftStickDir: String = "Neutral"
     private var lastRightStickDir: String = "Neutral"
 
-    // R2 trigger threshold
-    private let R2_THRESHOLD: Int = 50
+    // Track last processed stick positions for smooth movement
+    private var lastProcessedLeftX = 128
+    private var lastProcessedLeftY = 128
+    private var lastProcessedRightX = 128
+    private var lastProcessedRightY = 128
+
+    private var updateTimer: DispatchSourceTimer?
+
 
     init() {
         setupHIDManager()
+        startUpdateLoop()
+    }
+
+    private func startUpdateLoop() {
+        let queue = DispatchQueue(label: "com.ps5remote.update", qos: .userInteractive)
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now(), repeating: 1.0 / 60.0)
+        timer.setEventHandler { [weak self] in
+            self?.updateMouseAndScroll()
+        }
+        timer.resume()
+        self.updateTimer = timer
+    }
+
+    private func updateMouseAndScroll() {
+        if !r2Active {
+            return
+        }
+
+        // Update left stick mouse movement if position changed
+        if leftStickX != lastProcessedLeftX || leftStickY != lastProcessedLeftY {
+            Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
+            lastProcessedLeftX = leftStickX
+            lastProcessedLeftY = leftStickY
+        }
+
+        // Update right stick scrolling if position changed
+        if rightStickX != lastProcessedRightX || rightStickY != lastProcessedRightY {
+            Actions.scrollByStick(x: rightStickX, y: rightStickY)
+            lastProcessedRightX = rightStickX
+            lastProcessedRightY = rightStickY
+        }
     }
 
     private func isStickInDeadzone(_ value: Int) -> Bool {
@@ -165,10 +203,19 @@ class PS5Controller {
             return
         }
 
-        // Handle button presses (only dispatch on press, not release)
-        if usagePage == BUTTON_USAGE_PAGE && intValue == 1 {
+        // Handle button presses and releases
+        if usagePage == BUTTON_USAGE_PAGE {
             if let buttonName = buttonNames[usage] {
-                dispatch(input: .button(buttonName))
+                // R2 button is the modifier layer toggle
+                if buttonName == "R2" {
+                    r2Active = intValue == 1
+                    return
+                }
+
+                // All other buttons dispatch on press
+                if intValue == 1 {
+                    dispatch(input: .button(buttonName))
+                }
             }
             return
         }
@@ -184,11 +231,6 @@ class PS5Controller {
             return
         }
 
-        // Handle R2 trigger (usage 0x34) - sets r2Active
-        if usagePage == GENERIC_DESKTOP_PAGE && usage == 0x34 {
-            r2Active = Int(intValue) > R2_THRESHOLD
-            return
-        }
 
         // Handle analog sticks
         if usagePage == GENERIC_DESKTOP_PAGE {
@@ -200,13 +242,8 @@ class PS5Controller {
                     leftStickY = Int(intValue)
                 }
 
-                if r2Active {
-                    // In R2 mode: continuous mouse movement
-                    if !isStickInDeadzone(leftStickX) || !isStickInDeadzone(leftStickY) {
-                        Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
-                    }
-                } else {
-                    // Normal mode: dispatch directional events on direction change
+                // In normal mode: dispatch directional events on direction change
+                if !r2Active {
                     let dir = stickDirection(x: leftStickX, y: leftStickY)
                     if dir != lastLeftStickDir {
                         lastLeftStickDir = dir
@@ -226,13 +263,8 @@ class PS5Controller {
                     rightStickY = Int(intValue)
                 }
 
-                if r2Active {
-                    // In R2 mode: continuous scrolling
-                    if !isStickInDeadzone(rightStickX) || !isStickInDeadzone(rightStickY) {
-                        Actions.scrollByStick(x: rightStickX, y: rightStickY)
-                    }
-                } else {
-                    // Normal mode: dispatch directional events on direction change
+                // In normal mode: dispatch directional events on direction change
+                if !r2Active {
                     let dir = stickDirection(x: rightStickX, y: rightStickY)
                     if dir != lastRightStickDir {
                         lastRightStickDir = dir

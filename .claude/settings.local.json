@@ -8,7 +8,9 @@
       "Bash(ioreg -l -d 3)",
       "Bash(system_profiler SPBluetoothDataType)",
       "Bash(hidutil list *)",
-      "Bash(timeout 3 ./ps5-remote)"
+      "Bash(timeout 3 ./ps5-remote)",
+      "Bash(osascript -e 'id of app \"Ghostty\"')",
+      "Bash(mdls -name kMDItemCFBundleIdentifier /Applications/Ghostty.app)"
     ]
   }
 }
