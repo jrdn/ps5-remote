@@ -2,7 +2,7 @@
 
 [tasks.build]
 description = "Build the PS5 controller utility"
-run = "swiftc -o ps5-remote main.swift -framework IOKit"
+run = "swiftc -o ps5-remote main.swift Controller.swift Actions.swift Mapping.swift -framework IOKit -framework CoreGraphics"
 
 [tasks.run]
 description = "Run the PS5 controller utility"
