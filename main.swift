@@ -2,13 +2,23 @@ import Foundation
 import IOKit
 import IOKit.hid
 
+struct StandardError: TextOutputStream {
+    mutating func write(_ string: String) {
+        FileHandle.standardError.write(Data(string.utf8))
+    }
+}
+var standardError = StandardError()
+
 class PS5Controller {
     private var deviceRef: IOHIDDevice?
     private var manager: IOHIDManager?
 
-    // PS5 controller USB IDs
-    private let PS5_VENDOR_ID: Int32 = 0x054C  // Sony
-    private let PS5_PRODUCT_ID: Int32 = 0x05C5 // DualSense
+    // PS5 controller IDs (Sony)
+    private let PS5_VENDOR_ID: Int32 = 0x054C
+    // Product IDs vary by connection type:
+    // 0x05C5 = USB wired
+    // 0x0CE6 = Bluetooth wireless
+    private let PS5_PRODUCT_IDS: [Int32] = [0x05C5, 0x0CE6]
 
     // HID Usage Pages and Usages for PS5 buttons
     private let BUTTON_USAGE_PAGE: UInt32 = 0x09  // Button
@@ -50,10 +60,9 @@ class PS5Controller {
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
         self.manager = manager
 
-        // Set up matching criteria for PS5 controller
+        // Set up matching criteria - match Sony vendor ID (covers all variants)
         let matching: [String: Any] = [
-            kIOHIDVendorIDKey: PS5_VENDOR_ID,
-            kIOHIDProductIDKey: PS5_PRODUCT_ID
+            kIOHIDVendorIDKey: PS5_VENDOR_ID
         ]
 
         let matchingCF = matching as CFDictionary
@@ -133,8 +142,9 @@ class PS5Controller {
     }
 
     func start() {
-        print("Starting PS5 controller listener...")
-        print("Waiting for PS5 controller to connect...\n")
+        print("Starting PS5 controller listener...", to: &standardError)
+        print("Waiting for PS5 controller to connect...", to: &standardError)
+        print("(Vendor ID: 0x\(String(PS5_VENDOR_ID, radix: 16).uppercased()))\n", to: &standardError)
         CFRunLoopRun()
     }
 }

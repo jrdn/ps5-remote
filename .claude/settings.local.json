@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(swiftc -o ps5-remote main.swift -framework IOKit)",
+      "Bash(swiftc -o debug debug.swift -framework IOKit)",
+      "Bash(./debug)",
+      "Bash(system_profiler SPUSBDataType)",
+      "Bash(ioreg -l -d 3)",
+      "Bash(system_profiler SPBluetoothDataType)",
+      "Bash(hidutil list *)",
+      "Bash(timeout 3 ./ps5-remote)"
+    ]
+  }
+}
