@@ -1,14 +1,17 @@
 import Foundation
 
-// Action is defined in Actions.swift as: typealias Action = () -> Void
-
 enum ControllerInput: Hashable {
     case button(String)
     case dpad(String)
+    case leftStick(String)   // "Up", "Down", "Left", "Right"
+    case rightStick(String)  // "Up", "Down", "Left", "Right"
 }
 
-var buttonMapping: [ControllerInput: Action] = [
-    // Buttons - example with context-aware actions
+// Global state for R2 modifier layer (set by Controller.swift)
+var r2Active: Bool = false
+
+var defaultMapping: [ControllerInput: Action] = [
+    // Buttons
     .button("Square"): {
         if Actions.isActiveApp("Safari") {
             Actions.logEvent("Safari: Opening new tab")
@@ -43,8 +46,60 @@ var buttonMapping: [ControllerInput: Action] = [
     .dpad("Down"):  { Actions.logEvent("D-Pad Down") },
     .dpad("Left"):  { Actions.logEvent("D-Pad Left") },
     .dpad("Right"): { Actions.logEvent("D-Pad Right") },
+
+    // Left stick (directional events when R2 not held)
+    .leftStick("Up"):    { Actions.logEvent("Left Stick Up") },
+    .leftStick("Down"):  { Actions.logEvent("Left Stick Down") },
+    .leftStick("Left"):  { Actions.logEvent("Left Stick Left") },
+    .leftStick("Right"): { Actions.logEvent("Left Stick Right") },
+
+    // Right stick (directional events when R2 not held)
+    .rightStick("Up"):    { Actions.logEvent("Right Stick Up") },
+    .rightStick("Down"):  { Actions.logEvent("Right Stick Down") },
+    .rightStick("Left"):  { Actions.logEvent("Right Stick Left") },
+    .rightStick("Right"): { Actions.logEvent("Right Stick Right") },
+]
+
+var r2Mapping: [ControllerInput: Action] = [
+    // Buttons - custom R2 layer actions
+    .button("Square"): { Actions.logEvent("R2 + Square pressed") },
+    .button("X"):      { Actions.logEvent("R2 + X pressed") },
+    .button("Circle"): { Actions.logEvent("R2 + Circle pressed") },
+    .button("Triangle"): { Actions.logEvent("R2 + Triangle pressed") },
+
+    .button("L1"): { Actions.logEvent("R2 + L1 pressed") },
+    .button("R1"): { Actions.logEvent("R2 + R1 pressed") },
+    .button("L2"): { Actions.logEvent("R2 + L2 pressed") },
+    .button("R2"): { Actions.logEvent("R2 + R2 pressed") },
+
+    .button("Share"):    { Actions.logEvent("R2 + Share pressed") },
+    .button("Options"):  { Actions.logEvent("R2 + Options pressed") },
+
+    .button("L3"): { Actions.logEvent("R2 + L3 pressed") },
+    .button("R3"): { Actions.logEvent("R2 + R3 pressed") },
+
+    .button("PS"):       { Actions.logEvent("R2 + PS pressed") },
+    .button("Touchpad"): { Actions.logEvent("R2 + Touchpad pressed") },
+
+    // D-Pad in R2 mode
+    .dpad("Up"):    { Actions.logEvent("R2 + D-Pad Up") },
+    .dpad("Down"):  { Actions.logEvent("R2 + D-Pad Down") },
+    .dpad("Left"):  { Actions.logEvent("R2 + D-Pad Left") },
+    .dpad("Right"): { Actions.logEvent("R2 + D-Pad Right") },
+
+    // Sticks in R2 mode (note: mouse/scroll movement handled directly in Controller.swift)
+    .leftStick("Up"):    { Actions.logEvent("R2 + Left Stick Up") },
+    .leftStick("Down"):  { Actions.logEvent("R2 + Left Stick Down") },
+    .leftStick("Left"):  { Actions.logEvent("R2 + Left Stick Left") },
+    .leftStick("Right"): { Actions.logEvent("R2 + Left Stick Right") },
+
+    .rightStick("Up"):    { Actions.logEvent("R2 + Right Stick Up") },
+    .rightStick("Down"):  { Actions.logEvent("R2 + Right Stick Down") },
+    .rightStick("Left"):  { Actions.logEvent("R2 + Right Stick Left") },
+    .rightStick("Right"): { Actions.logEvent("R2 + Right Stick Right") },
 ]
 
 func dispatch(input: ControllerInput) {
-    buttonMapping[input]?()
+    let mapping = r2Active ? r2Mapping : defaultMapping
+    mapping[input]?()
 }

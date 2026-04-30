@@ -70,6 +70,13 @@ class PS5Controller {
     private var rightStickX: Int = 128
     private var rightStickY: Int = 128
 
+    // Track last stick directions for hysteresis (only dispatch on direction change)
+    private var lastLeftStickDir: String = "Neutral"
+    private var lastRightStickDir: String = "Neutral"
+
+    // R2 trigger threshold
+    private let R2_THRESHOLD: Int = 50
+
     init() {
         setupHIDManager()
     }
@@ -77,6 +84,23 @@ class PS5Controller {
     private func isStickInDeadzone(_ value: Int) -> Bool {
         let center = 128
         return abs(value - center) < STICK_DEADZONE
+    }
+
+    private func stickDirection(x: Int, y: Int) -> String {
+        let dx = x - 128
+        let dy = y - 128
+
+        // Check if both axes are in deadzone
+        if abs(dx) < STICK_DEADZONE && abs(dy) < STICK_DEADZONE {
+            return "Neutral"
+        }
+
+        // Determine direction based on which axis has larger magnitude
+        if abs(dx) >= abs(dy) {
+            return dx > 0 ? "Right" : "Left"
+        } else {
+            return dy > 0 ? "Down" : "Up"
+        }
     }
 
     private func setupHIDManager() {
@@ -160,36 +184,62 @@ class PS5Controller {
             return
         }
 
-        // Handle analog sticks for mouse/scroll movement
+        // Handle R2 trigger (usage 0x34) - sets r2Active
+        if usagePage == GENERIC_DESKTOP_PAGE && usage == 0x34 {
+            r2Active = Int(intValue) > R2_THRESHOLD
+            return
+        }
+
+        // Handle analog sticks
         if usagePage == GENERIC_DESKTOP_PAGE {
-            // Left stick - mouse movement (usage 0x30=X, 0x31=Y)
-            if usage == 0x30 {
-                leftStickX = Int(intValue)
-                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(leftStickY) {
-                    Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
+            // Left stick (usage 0x30=X, 0x31=Y)
+            if usage == 0x30 || usage == 0x31 {
+                if usage == 0x30 {
+                    leftStickX = Int(intValue)
+                } else {
+                    leftStickY = Int(intValue)
                 }
-                return
-            }
-            if usage == 0x31 {
-                leftStickY = Int(intValue)
-                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(leftStickX) {
-                    Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
+
+                if r2Active {
+                    // In R2 mode: continuous mouse movement
+                    if !isStickInDeadzone(leftStickX) || !isStickInDeadzone(leftStickY) {
+                        Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
+                    }
+                } else {
+                    // Normal mode: dispatch directional events on direction change
+                    let dir = stickDirection(x: leftStickX, y: leftStickY)
+                    if dir != lastLeftStickDir {
+                        lastLeftStickDir = dir
+                        if dir != "Neutral" {
+                            dispatch(input: .leftStick(dir))
+                        }
+                    }
                 }
                 return
             }
 
-            // Right stick - scroll (usage 0x32=X, 0x35=Y)
-            if usage == 0x32 {
-                rightStickX = Int(intValue)
-                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(rightStickY) {
-                    Actions.scrollByStick(x: rightStickX, y: rightStickY)
+            // Right stick (usage 0x32=X, 0x35=Y)
+            if usage == 0x32 || usage == 0x35 {
+                if usage == 0x32 {
+                    rightStickX = Int(intValue)
+                } else {
+                    rightStickY = Int(intValue)
                 }
-                return
-            }
-            if usage == 0x35 {
-                rightStickY = Int(intValue)
-                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(rightStickX) {
-                    Actions.scrollByStick(x: rightStickX, y: rightStickY)
+
+                if r2Active {
+                    // In R2 mode: continuous scrolling
+                    if !isStickInDeadzone(rightStickX) || !isStickInDeadzone(rightStickY) {
+                        Actions.scrollByStick(x: rightStickX, y: rightStickY)
+                    }
+                } else {
+                    // Normal mode: dispatch directional events on direction change
+                    let dir = stickDirection(x: rightStickX, y: rightStickY)
+                    if dir != lastRightStickDir {
+                        lastRightStickDir = dir
+                        if dir != "Neutral" {
+                            dispatch(input: .rightStick(dir))
+                        }
+                    }
                 }
                 return
             }
