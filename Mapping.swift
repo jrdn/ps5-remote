@@ -51,6 +51,8 @@ var defaultMapping: [ControllerInput: Action] = [
     .leftStick("Up"): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowUp()
+        } else if Actions.isActiveApp("ghostty") {
+            Actions.cmdBacktick()
         } else {
             Actions.logEvent("Left Stick Up")
         }
@@ -58,6 +60,8 @@ var defaultMapping: [ControllerInput: Action] = [
     .leftStick("Down"): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowDown()
+        } else if Actions.isActiveApp("ghostty") {
+            Actions.cmdShiftBacktick()
         } else {
             Actions.logEvent("Left Stick Down")
         }

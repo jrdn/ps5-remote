@@ -111,6 +111,26 @@ class Actions {
         sendKeyWithModifier(124, modifier: "shift")  // Right arrow = 124
     }
 
+    static func cmdBacktick() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+`")
+        let script = """
+        tell application "System Events"
+            key code 50 using command down
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func cmdShiftBacktick() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Shift+`")
+        let script = """
+        tell application "System Events"
+            key code 50 using {command down, shift down}
+        end tell
+        """
+        runAppleScript(script)
+    }
+
     static func controlTab() {
         logEvent("\(getActiveAppName() ?? "unknown"): Control+Tab")
         let script = """
