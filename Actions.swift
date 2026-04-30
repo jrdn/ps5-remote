@@ -113,9 +113,9 @@ class Actions {
     }
 
     static func scrollByStick(x: Int, y: Int) {
-        // Convert 0-255 to scroll deltas (-128 to 127)
-        let scrollY = Int32(Double(y - 128) * SCROLL_SENSITIVITY)
-        let scrollX = Int32(Double(x - 128) * SCROLL_SENSITIVITY)
+        // Convert 0-255 to scroll deltas (-128 to 127), negated for natural scroll direction
+        let scrollY = -Int32(Double(y - 128) * SCROLL_SENSITIVITY)
+        let scrollX = -Int32(Double(x - 128) * SCROLL_SENSITIVITY)
 
         // Skip if movement is negligible
         if abs(scrollY) < 1 && abs(scrollX) < 1 {
