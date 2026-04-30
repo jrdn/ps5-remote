@@ -24,8 +24,8 @@ var buttonMapping: [ControllerInput: Action] = [
     .button("Circle"):   { Actions.logEvent("Circle pressed") },
     .button("Triangle"): { Actions.logEvent("Triangle pressed") },
 
-    .button("L1"):       { Actions.logEvent("L1 pressed") },
-    .button("R1"):       { Actions.logEvent("R1 pressed") },
+    .button("L1"):       { Actions.leftClick() },
+    .button("R1"):       { Actions.rightClick() },
     .button("L2"):       { Actions.logEvent("L2 pressed") },
     .button("R2"):       { Actions.logEvent("R2 pressed") },
 

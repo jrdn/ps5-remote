@@ -132,6 +132,37 @@ class Actions {
         scrollEvent.post(tap: .cghidEventTap)
     }
 
+    // Mouse clicks
+    static func leftClick() {
+        logEvent("Left click")
+        guard let currentEvent = CGEvent(source: nil) else { return }
+        let pos = currentEvent.location
+
+        guard let downEvent = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown,
+                                      mouseCursorPosition: pos, mouseButton: .left),
+              let upEvent = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp,
+                                    mouseCursorPosition: pos, mouseButton: .left) else { return }
+
+        downEvent.post(tap: .cghidEventTap)
+        usleep(10000)  // 10ms between down and up for realistic click
+        upEvent.post(tap: .cghidEventTap)
+    }
+
+    static func rightClick() {
+        logEvent("Right click")
+        guard let currentEvent = CGEvent(source: nil) else { return }
+        let pos = currentEvent.location
+
+        guard let downEvent = CGEvent(mouseEventSource: nil, mouseType: .rightMouseDown,
+                                      mouseCursorPosition: pos, mouseButton: .right),
+              let upEvent = CGEvent(mouseEventSource: nil, mouseType: .rightMouseUp,
+                                    mouseCursorPosition: pos, mouseButton: .right) else { return }
+
+        downEvent.post(tap: .cghidEventTap)
+        usleep(10000)  // 10ms between down and up for realistic click
+        upEvent.post(tap: .cghidEventTap)
+    }
+
     private static func runAppleScript(_ script: String) {
         let task = Process()
         task.launchPath = "/usr/bin/osascript"
