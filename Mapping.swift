@@ -65,6 +65,8 @@ var defaultMapping: [ControllerInput: Action] = [
     .leftStick("Left"): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowLeft()
+        } else if Actions.isActiveApp("Ghostty") {
+            Actions.controlShiftTab()
         } else {
             Actions.logEvent("Left Stick Left")
         }
@@ -72,6 +74,8 @@ var defaultMapping: [ControllerInput: Action] = [
     .leftStick("Right"): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowRight()
+        } else if Actions.isActiveApp("Ghostty") {
+            Actions.controlTab()
         } else {
             Actions.logEvent("Left Stick Right")
         }

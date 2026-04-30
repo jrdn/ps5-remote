@@ -111,6 +111,26 @@ class Actions {
         sendKeyWithModifier(124, modifier: "shift")  // Right arrow = 124
     }
 
+    static func controlTab() {
+        logEvent("Control+Tab")
+        let script = """
+        tell application "System Events"
+            key code 48 using control down
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func controlShiftTab() {
+        logEvent("Control+Shift+Tab")
+        let script = """
+        tell application "System Events"
+            key code 48 using {control down, shift down}
+        end tell
+        """
+        runAppleScript(script)
+    }
+
     // Stick-to-mouse conversion
     private static let MOUSE_SENSITIVITY: Double = 0.2
     private static let SCROLL_SENSITIVITY: Double = 0.05
