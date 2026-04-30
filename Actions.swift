@@ -82,6 +82,56 @@ class Actions {
         runAppleScript(script)
     }
 
+    // Stick-to-mouse conversion
+    private static let MOUSE_SENSITIVITY: Double = 0.2
+    private static let SCROLL_SENSITIVITY: Double = 0.05
+
+    static func moveMouseByStick(x: Int, y: Int) {
+        // Convert 0-255 to delta (-128 to 127)
+        let deltaX = Double(x - 128) * MOUSE_SENSITIVITY
+        let deltaY = Double(y - 128) * MOUSE_SENSITIVITY
+
+        // Skip if movement is negligible
+        if abs(deltaX) < 0.5 && abs(deltaY) < 0.5 {
+            return
+        }
+
+        // Get current mouse position
+        guard let currentEvent = CGEvent(source: nil) else { return }
+        let currentPos = currentEvent.location
+
+        // Calculate new position
+        let newPos = CGPoint(
+            x: currentPos.x + deltaX,
+            y: currentPos.y + deltaY
+        )
+
+        // Post mouse move event
+        guard let moveEvent = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved,
+                                      mouseCursorPosition: newPos, mouseButton: .left) else { return }
+        moveEvent.post(tap: .cghidEventTap)
+    }
+
+    static func scrollByStick(x: Int, y: Int) {
+        // Convert 0-255 to scroll deltas (-128 to 127)
+        let scrollY = Int32(Double(y - 128) * SCROLL_SENSITIVITY)
+        let scrollX = Int32(Double(x - 128) * SCROLL_SENSITIVITY)
+
+        // Skip if movement is negligible
+        if abs(scrollY) < 1 && abs(scrollX) < 1 {
+            return
+        }
+
+        // Post scroll wheel event (vertical scroll is wheel1, horizontal is wheel2)
+        guard let scrollEvent = CGEvent(scrollWheelEvent2Source: nil,
+                                       units: .line,
+                                       wheelCount: 2,
+                                       wheel1: scrollY,
+                                       wheel2: scrollX,
+                                       wheel3: 0) else { return }
+        scrollEvent.post(tap: .cghidEventTap)
+    }
+
     private static func runAppleScript(_ script: String) {
         let task = Process()
         task.launchPath = "/usr/bin/osascript"

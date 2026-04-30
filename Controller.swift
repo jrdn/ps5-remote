@@ -64,6 +64,12 @@ class PS5Controller {
     // Stick deadzone - values within this range of center (128) are ignored
     private let STICK_DEADZONE: Int = 20  // ±20 from center
 
+    // Track stick positions (0-255, center at 128)
+    private var leftStickX: Int = 128
+    private var leftStickY: Int = 128
+    private var rightStickX: Int = 128
+    private var rightStickY: Int = 128
+
     init() {
         setupHIDManager()
     }
@@ -154,8 +160,40 @@ class PS5Controller {
             return
         }
 
-        // Ignore analog stick and trigger changes (they're just logged, not dispatched)
-        // This keeps the action system clean - only buttons and D-pad trigger actions
+        // Handle analog sticks for mouse/scroll movement
+        if usagePage == GENERIC_DESKTOP_PAGE {
+            // Left stick - mouse movement (usage 0x30=X, 0x31=Y)
+            if usage == 0x30 {
+                leftStickX = Int(intValue)
+                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(leftStickY) {
+                    Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
+                }
+                return
+            }
+            if usage == 0x31 {
+                leftStickY = Int(intValue)
+                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(leftStickX) {
+                    Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
+                }
+                return
+            }
+
+            // Right stick - scroll (usage 0x32=X, 0x35=Y)
+            if usage == 0x32 {
+                rightStickX = Int(intValue)
+                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(rightStickY) {
+                    Actions.scrollByStick(x: rightStickX, y: rightStickY)
+                }
+                return
+            }
+            if usage == 0x35 {
+                rightStickY = Int(intValue)
+                if !isStickInDeadzone(Int(intValue)) || !isStickInDeadzone(rightStickX) {
+                    Actions.scrollByStick(x: rightStickX, y: rightStickY)
+                }
+                return
+            }
+        }
     }
 
     func start() {
