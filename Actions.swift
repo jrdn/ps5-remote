@@ -35,6 +35,22 @@ class Actions {
         task.launch()
     }
 
+    // macOS-specific actions
+    static func switchSpaceLeft() {
+        // Control+Left Arrow
+        pressKey(0x7B, modifiers: .maskControl)
+    }
+
+    static func switchSpaceRight() {
+        // Control+Right Arrow
+        pressKey(0x7C, modifiers: .maskControl)
+    }
+
+    static func toggleMissionControl() {
+        // Command+F3
+        pressKey(0x60, modifiers: .maskCommand)
+    }
+
     // Helper to map characters to macOS key codes
     private static func charToKeyCode(_ char: Character) -> UInt16? {
         switch char {

@@ -19,14 +19,14 @@ var buttonMapping: [ControllerInput: Action] = [
     .button("L2"):       { Actions.logEvent("L2 pressed") },
     .button("R2"):       { Actions.logEvent("R2 pressed") },
 
-    .button("Share"):    { Actions.logEvent("Share pressed") },
-    .button("Options"):  { Actions.logEvent("Options pressed") },
+    .button("Share"):    { Actions.switchSpaceLeft() },
+    .button("Options"):  { Actions.switchSpaceRight() },
 
     .button("L3"):       { Actions.logEvent("L3 pressed") },
     .button("R3"):       { Actions.logEvent("R3 pressed") },
 
     .button("PS"):       { Actions.logEvent("PS pressed") },
-    .button("Touchpad"): { Actions.logEvent("Touchpad pressed") },
+    .button("Touchpad"): { Actions.toggleMissionControl() },
 
     // D-Pad
     .dpad("Up"):    { Actions.logEvent("D-Pad Up") },
