@@ -42,10 +42,22 @@ var defaultMapping: [ControllerInput: Action] = [
     .button("Touchpad"): { Actions.toggleMissionControl() },
 
     // D-Pad
-    .dpad("Up"):    { Actions.logEvent("D-Pad Up") },
-    .dpad("Down"):  { Actions.logEvent("D-Pad Down") },
-    .dpad("Left"):  { Actions.logEvent("D-Pad Left") },
-    .dpad("Right"): { Actions.logEvent("D-Pad Right") },
+    .dpad("Up"):   { Actions.logEvent("D-Pad Up") },
+    .dpad("Down"): { Actions.logEvent("D-Pad Down") },
+    .dpad("Left"): {
+        if Actions.isActiveApp("ghostty") {
+            Actions.cmdBracketLeft()
+        } else {
+            Actions.logEvent("D-Pad Left")
+        }
+    },
+    .dpad("Right"): {
+        if Actions.isActiveApp("ghostty") {
+            Actions.cmdBracketRight()
+        } else {
+            Actions.logEvent("D-Pad Right")
+        }
+    },
 
     // Left stick (directional events when R2 not held)
     .leftStick("Up"): {
