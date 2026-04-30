@@ -81,6 +81,11 @@ class PS5Controller {
     private var lastProcessedRightY = 128
 
     private var updateTimer: DispatchSourceTimer?
+    private let stickLock = NSLock()
+    private var cachedLeftStickX = 128
+    private var cachedLeftStickY = 128
+    private var cachedRightStickX = 128
+    private var cachedRightStickY = 128
 
 
     init() {
@@ -104,18 +109,21 @@ class PS5Controller {
             return
         }
 
-        // Update left stick mouse movement if position changed
-        if leftStickX != lastProcessedLeftX || leftStickY != lastProcessedLeftY {
-            Actions.moveMouseByStick(x: leftStickX, y: leftStickY)
-            lastProcessedLeftX = leftStickX
-            lastProcessedLeftY = leftStickY
+        stickLock.lock()
+        let leftX = cachedLeftStickX
+        let leftY = cachedLeftStickY
+        let rightX = cachedRightStickX
+        let rightY = cachedRightStickY
+        stickLock.unlock()
+
+        // Send left stick mouse movement continuously when outside deadzone
+        if !isStickInDeadzone(leftX) || !isStickInDeadzone(leftY) {
+            Actions.moveMouseByStick(x: leftX, y: leftY)
         }
 
-        // Update right stick scrolling if position changed
-        if rightStickX != lastProcessedRightX || rightStickY != lastProcessedRightY {
-            Actions.scrollByStick(x: rightStickX, y: rightStickY)
-            lastProcessedRightX = rightStickX
-            lastProcessedRightY = rightStickY
+        // Send right stick scrolling continuously when outside deadzone
+        if !isStickInDeadzone(rightX) || !isStickInDeadzone(rightY) {
+            Actions.scrollByStick(x: rightX, y: rightY)
         }
     }
 
@@ -236,10 +244,17 @@ class PS5Controller {
         if usagePage == GENERIC_DESKTOP_PAGE {
             // Left stick (usage 0x30=X, 0x31=Y)
             if usage == 0x30 || usage == 0x31 {
+                let stickValue = Int(intValue)
                 if usage == 0x30 {
-                    leftStickX = Int(intValue)
+                    leftStickX = stickValue
+                    stickLock.lock()
+                    cachedLeftStickX = stickValue
+                    stickLock.unlock()
                 } else {
-                    leftStickY = Int(intValue)
+                    leftStickY = stickValue
+                    stickLock.lock()
+                    cachedLeftStickY = stickValue
+                    stickLock.unlock()
                 }
 
                 // In normal mode: dispatch directional events on direction change
@@ -257,10 +272,17 @@ class PS5Controller {
 
             // Right stick (usage 0x32=X, 0x35=Y)
             if usage == 0x32 || usage == 0x35 {
+                let stickValue = Int(intValue)
                 if usage == 0x32 {
-                    rightStickX = Int(intValue)
+                    rightStickX = stickValue
+                    stickLock.lock()
+                    cachedRightStickX = stickValue
+                    stickLock.unlock()
                 } else {
-                    rightStickY = Int(intValue)
+                    rightStickY = stickValue
+                    stickLock.lock()
+                    cachedRightStickY = stickValue
+                    stickLock.unlock()
                 }
 
                 // In normal mode: dispatch directional events on direction change
