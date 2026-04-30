@@ -38,7 +38,7 @@ var defaultMapping: [ControllerInput: Action] = [
     .button("L3"):       { Actions.logEvent("L3 pressed") },
     .button("R3"):       { Actions.logEvent("R3 pressed") },
 
-    .button("PS"):       { Actions.logEvent("PS pressed") },
+    .button("PS"):       { Actions.startDictation() },
     .button("Touchpad"): { Actions.toggleMissionControl() },
 
     // D-Pad

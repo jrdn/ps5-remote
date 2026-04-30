@@ -72,6 +72,19 @@ class Actions {
         runAppleScript(script)
     }
 
+    static func startDictation() {
+        logEvent("Starting dictation")
+        // DictationIM triggers on double-tap of Fn key (keycode 63, flags-changed event)
+        for _ in 0..<2 {
+            let down = CGEvent(keyboardEventSource: nil, virtualKey: 63, keyDown: true)
+            let up   = CGEvent(keyboardEventSource: nil, virtualKey: 63, keyDown: false)
+            down?.post(tap: .cghidEventTap)
+            usleep(30000)
+            up?.post(tap: .cghidEventTap)
+            usleep(30000)
+        }
+    }
+
     static func toggleMissionControl() {
         logEvent("Toggling Mission Control")
         let script = """
