@@ -82,6 +82,35 @@ class Actions {
         runAppleScript(script)
     }
 
+    static func sendKeyWithModifier(_ keyCode: Int, modifier: String) {
+        let script = """
+        tell application "System Events"
+            key code \(keyCode) using \(modifier) down
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func shiftArrowUp() {
+        logEvent("Shift+Up")
+        sendKeyWithModifier(126, modifier: "shift")  // Up arrow = 126
+    }
+
+    static func shiftArrowDown() {
+        logEvent("Shift+Down")
+        sendKeyWithModifier(125, modifier: "shift")  // Down arrow = 125
+    }
+
+    static func shiftArrowLeft() {
+        logEvent("Shift+Left")
+        sendKeyWithModifier(123, modifier: "shift")  // Left arrow = 123
+    }
+
+    static func shiftArrowRight() {
+        logEvent("Shift+Right")
+        sendKeyWithModifier(124, modifier: "shift")  // Right arrow = 124
+    }
+
     // Stick-to-mouse conversion
     private static let MOUSE_SENSITIVITY: Double = 0.2
     private static let SCROLL_SENSITIVITY: Double = 0.05

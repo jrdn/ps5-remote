@@ -48,10 +48,34 @@ var defaultMapping: [ControllerInput: Action] = [
     .dpad("Right"): { Actions.logEvent("D-Pad Right") },
 
     // Left stick (directional events when R2 not held)
-    .leftStick("Up"):    { Actions.logEvent("Left Stick Up") },
-    .leftStick("Down"):  { Actions.logEvent("Left Stick Down") },
-    .leftStick("Left"):  { Actions.logEvent("Left Stick Left") },
-    .leftStick("Right"): { Actions.logEvent("Left Stick Right") },
+    .leftStick("Up"): {
+        if Actions.isActiveApp("Emacs") {
+            Actions.shiftArrowUp()
+        } else {
+            Actions.logEvent("Left Stick Up")
+        }
+    },
+    .leftStick("Down"): {
+        if Actions.isActiveApp("Emacs") {
+            Actions.shiftArrowDown()
+        } else {
+            Actions.logEvent("Left Stick Down")
+        }
+    },
+    .leftStick("Left"): {
+        if Actions.isActiveApp("Emacs") {
+            Actions.shiftArrowLeft()
+        } else {
+            Actions.logEvent("Left Stick Left")
+        }
+    },
+    .leftStick("Right"): {
+        if Actions.isActiveApp("Emacs") {
+            Actions.shiftArrowRight()
+        } else {
+            Actions.logEvent("Left Stick Right")
+        }
+    },
 
     // Right stick (directional events when R2 not held)
     .rightStick("Up"):    { Actions.logEvent("Right Stick Up") },
