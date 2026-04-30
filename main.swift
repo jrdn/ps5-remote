@@ -61,8 +61,16 @@ class PS5Controller {
         8: "Neutral"
     ]
 
+    // Stick deadzone - values within this range of center (128) are ignored
+    private let STICK_DEADZONE: Int = 20  // ±20 from center
+
     init() {
         setupHIDManager()
+    }
+
+    private func isStickInDeadzone(_ value: Int) -> Bool {
+        let center = 128
+        return abs(value - center) < STICK_DEADZONE
     }
 
     private func setupHIDManager() {
@@ -146,6 +154,10 @@ class PS5Controller {
                     description = "D-Pad: Unknown(\(intValue))"
                 }
             } else if let axisName = axisNames[usage] {
+                // Apply deadzone to analog sticks (not triggers)
+                if (usage == 0x30 || usage == 0x31 || usage == 0x32 || usage == 0x35) && isStickInDeadzone(Int(intValue)) {
+                    return  // Ignore stick movement within deadzone
+                }
                 description = "Analog: \(axisName) = \(intValue)"
             } else {
                 description = "Axis 0x\(String(usage, radix: 16)): \(intValue)"
