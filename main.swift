@@ -55,14 +55,10 @@ class PS5Controller {
     // D-pad (Hat Switch) - usage 0x39
     private let dpadDirections: [Int: String] = [
         0: "Neutral",
-        1: "Up",
-        2: "Up-Right",
-        3: "Right",
-        4: "Down-Right",
-        5: "Down",
-        6: "Down-Left",
-        7: "Left",
-        8: "Up-Left"
+        2: "Right",
+        4: "Down",
+        6: "Left",
+        8: "Up"
     ]
 
     init() {
@@ -143,9 +139,9 @@ class PS5Controller {
             }
         } else if usagePage == GENERIC_DESKTOP_PAGE {
             if usage == 0x39 {
-                // D-pad (Hat Switch) - log raw value to debug mapping
+                // D-pad (Hat Switch)
                 if let direction = dpadDirections[Int(intValue)] {
-                    description = "D-Pad: \(direction) (raw: \(intValue))"
+                    description = "D-Pad: \(direction)"
                 } else {
                     description = "D-Pad: Unknown(\(intValue))"
                 }
