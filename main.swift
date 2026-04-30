@@ -143,9 +143,9 @@ class PS5Controller {
             }
         } else if usagePage == GENERIC_DESKTOP_PAGE {
             if usage == 0x39 {
-                // D-pad (Hat Switch)
+                // D-pad (Hat Switch) - log raw value to debug mapping
                 if let direction = dpadDirections[Int(intValue)] {
-                    description = "D-Pad: \(direction)"
+                    description = "D-Pad: \(direction) (raw: \(intValue))"
                 } else {
                     description = "D-Pad: Unknown(\(intValue))"
                 }
