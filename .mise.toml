@@ -1,0 +1,22 @@
+[tasks]
+
+[tasks.build]
+description = "Build the PS5 controller utility"
+run = "swiftc -o ps5-remote main.swift -framework IOKit"
+
+[tasks.run]
+description = "Run the PS5 controller utility"
+run = "./ps5-remote"
+depends = ["build"]
+
+[tasks.clean]
+description = "Remove built artifacts"
+run = "rm -f ps5-remote *.o *.swiftmodule"
+
+[tasks.rebuild]
+description = "Clean and build"
+run = "mise run clean && mise run build"
+
+[tasks.watch]
+description = "Rebuild on file changes"
+run = "while true; do inotifywait -e modify *.swift && mise run build; done 2>/dev/null || echo 'Note: Install fswatch or inotify-tools for auto-rebuild'; sleep 1; done"
