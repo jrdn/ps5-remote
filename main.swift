@@ -54,11 +54,11 @@ class PS5Controller {
 
     // D-pad (Hat Switch) - usage 0x39
     private let dpadDirections: [Int: String] = [
-        0: "Neutral",
+        0: "Up",
         2: "Right",
         4: "Down",
         6: "Left",
-        8: "Up"
+        8: "Neutral"
     ]
 
     init() {
