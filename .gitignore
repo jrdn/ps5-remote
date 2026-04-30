@@ -3,3 +3,10 @@
 .dolt/
 *.db
 .beads-credential-key
+
+# Build artifacts
+ps5-remote
+debug
+test
+*.o
+*.swiftmodule
