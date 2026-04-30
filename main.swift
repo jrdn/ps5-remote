@@ -52,6 +52,19 @@ class PS5Controller {
         0x34: "R2 Trigger"
     ]
 
+    // D-pad (Hat Switch) - usage 0x39
+    private let dpadDirections: [Int: String] = [
+        0: "Neutral",
+        1: "Up",
+        2: "Up-Right",
+        3: "Right",
+        4: "Down-Right",
+        5: "Down",
+        6: "Down-Left",
+        7: "Left",
+        8: "Up-Left"
+    ]
+
     init() {
         setupHIDManager()
     }
@@ -114,8 +127,8 @@ class PS5Controller {
         let usage = IOHIDElementGetUsage(element)
         let timestamp = Date().formatted(date: .omitted, time: .standard)
 
-        // Ignore zero values on analog inputs to reduce noise
-        if (usagePage == GENERIC_DESKTOP_PAGE) && intValue == 0 {
+        // Ignore zero values on analog inputs to reduce noise (but not D-pad)
+        if (usagePage == GENERIC_DESKTOP_PAGE) && intValue == 0 && usage != 0x39 {
             return
         }
 
@@ -129,7 +142,14 @@ class PS5Controller {
                 description = "Button \(usage): \(intValue)"
             }
         } else if usagePage == GENERIC_DESKTOP_PAGE {
-            if let axisName = axisNames[usage] {
+            if usage == 0x39 {
+                // D-pad (Hat Switch)
+                if let direction = dpadDirections[Int(intValue)] {
+                    description = "D-Pad: \(direction)"
+                } else {
+                    description = "D-Pad: Unknown(\(intValue))"
+                }
+            } else if let axisName = axisNames[usage] {
                 description = "Analog: \(axisName) = \(intValue)"
             } else {
                 description = "Axis 0x\(String(usage, radix: 16)): \(intValue)"
