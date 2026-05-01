@@ -22,5 +22,6 @@ run = "mise run clean && mise run build"
 [tasks.dev]
 description = "Watch and rebuild/rerun on changes"
 run = "mise run run"
+sources = ["*.swift"]
 
 
