@@ -45,6 +45,26 @@ class Actions {
         runAppleScript(script)
     }
 
+
+
+    static func sendEscape() {
+        let script = """
+        tell application "System Events"
+            key code 53
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func sendEnter() {
+        let script = """
+        tell application "System Events"
+            key code 36
+        end tell
+        """
+        runAppleScript(script)
+    }
+
     static func startDictation() {
         logEvent("Starting dictation")
         // Cmd+Shift+D
@@ -157,7 +177,8 @@ class Actions {
 
     // Stick-to-mouse conversion
     private static let MOUSE_SENSITIVITY: Double = 0.2
-    private static let SCROLL_SENSITIVITY: Double = 0.05
+    private static let SCROLL_SENSITIVITY: Double = 0.03
+    private static var scrollEventCounter = 0
 
     static func moveMouseByStick(x: Int, y: Int) {
         // Convert 0-255 to delta (-128 to 127)
@@ -186,6 +207,12 @@ class Actions {
     }
 
     static func scrollByStick(x: Int, y: Int) {
+        // Throttle scroll events to every 4th update (15Hz instead of 60Hz) for slower scrolling
+        scrollEventCounter += 1
+        if scrollEventCounter % 4 != 0 {
+            return
+        }
+
         // Convert 0-255 to scroll deltas (-128 to 127), negated for natural scroll direction
         let scrollY = -Int32(Double(y - 128) * SCROLL_SENSITIVITY)
         let scrollX = -Int32(Double(x - 128) * SCROLL_SENSITIVITY)

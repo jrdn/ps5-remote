@@ -14,13 +14,13 @@ var defaultMapping: [ControllerInput: Action] = [
     // Buttons
     .button("Square"): { },
 
-    .button("X"):        { },
-    .button("Circle"):   { },
+    .button("X"):        { Actions.sendEnter() },
+    .button("Circle"):   { Actions.sendEscape() },
     .button("Triangle"): { },
 
     .button("L1"):       { },
     .button("R1"):       { },
-    .button("L2"):       { },
+    .button("L2"):       { Actions.startDictation() },
     .button("R2"):       { },
 
     .button("Share"):    { Actions.switchSpaceLeft() },
