@@ -220,9 +220,11 @@ class PS5Controller {
                     return
                 }
 
-                // All other buttons dispatch on press
+                // Dispatch on press and release
                 if intValue == 1 {
                     dispatch(input: .button(buttonName))
+                } else if intValue == 0 {
+                    dispatch(input: .buttonReleased(buttonName))
                 }
             }
             return

@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "ps5_remote",
+  "project_id": "397995f8-1938-423b-9a41-baf5b0993128"
+}

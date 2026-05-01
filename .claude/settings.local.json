@@ -10,7 +10,9 @@
       "Bash(hidutil list *)",
       "Bash(timeout 3 ./ps5-remote)",
       "Bash(osascript -e 'id of app \"Ghostty\"')",
-      "Bash(mdls -name kMDItemCFBundleIdentifier /Applications/Ghostty.app)"
+      "Bash(mdls -name kMDItemCFBundleIdentifier /Applications/Ghostty.app)",
+      "WebSearch",
+      "Bash(swiftc *)"
     ]
   }
 }

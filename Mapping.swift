@@ -2,6 +2,7 @@ import Foundation
 
 enum ControllerInput: Hashable {
     case button(String)
+    case buttonReleased(String)
     case dpad(String)
     case leftStick(String)   // "Up", "Down", "Left", "Right"
     case rightStick(String)  // "Up", "Down", "Left", "Right"
@@ -18,9 +19,11 @@ var defaultMapping: [ControllerInput: Action] = [
     .button("Circle"):   { Actions.sendEscape() },
     .button("Triangle"): { },
 
-    .button("L1"):       { },
+    .button("L1"):       { Actions.leftClickDown() },
+    .buttonReleased("L1"): { Actions.leftClickUp() },
     .button("R1"):       { },
-    .button("L2"):       { Actions.startDictation() },
+    .button("L2"):       { Actions.startDictationPress() },
+    .buttonReleased("L2"): { Actions.startDictationRelease() },
     .button("R2"):       { },
 
     .button("Share"):    { Actions.switchSpaceLeft() },
@@ -29,22 +32,14 @@ var defaultMapping: [ControllerInput: Action] = [
     .button("L3"):       { },
     .button("R3"):       { },
 
-    .button("PS"):       { Actions.startDictation() },
+    .button("PS"):       { Actions.startDictationPress() },
     .button("Touchpad"): { Actions.toggleMissionControl() },
 
     // D-Pad
-    .dpad("Up"):   { },
-    .dpad("Down"): { },
-    .dpad("Left"): {
-        if Actions.isActiveApp("ghostty") {
-            Actions.cmdBracketLeft()
-        }
-    },
-    .dpad("Right"): {
-        if Actions.isActiveApp("ghostty") {
-            Actions.cmdBracketRight()
-        }
-    },
+    .dpad("Up"):    { Actions.arrowUp() },
+    .dpad("Down"):  { Actions.arrowDown() },
+    .dpad("Left"):  { Actions.arrowLeft() },
+    .dpad("Right"): { Actions.arrowRight() },
 
     // Left stick (directional events when R2 not held)
     .leftStick("Up"): {
@@ -90,9 +85,11 @@ var r2Mapping: [ControllerInput: Action] = [
     .button("Circle"): { },
     .button("Triangle"): { },
 
-    .button("L1"): { Actions.leftClick() },
+    .button("L1"): { Actions.leftClickDown() },
+    .buttonReleased("L1"): { Actions.leftClickUp() },
     .button("R1"): { Actions.rightClick() },
-    .button("L2"): { },
+    .button("L2"): { Actions.startDictationPress() },
+    .buttonReleased("L2"): { Actions.startDictationRelease() },
     .button("R2"): { },
 
     .button("Share"):    { },

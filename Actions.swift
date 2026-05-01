@@ -65,9 +65,18 @@ class Actions {
         runAppleScript(script)
     }
 
-    static func startDictation() {
-        logEvent("Starting dictation")
-        // Cmd+Shift+D
+    static func startDictationPress() {
+        logEvent("Dictation: key down")
+        let script = """
+        tell application "System Events"
+            key code 2 using {command down, shift down}
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func startDictationRelease() {
+        logEvent("Dictation: key up")
         let script = """
         tell application "System Events"
             key code 2 using {command down, shift down}
@@ -90,6 +99,42 @@ class Actions {
         let script = """
         tell application "System Events"
             key code \(keyCode) using \(modifier) down
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func arrowUp() {
+        let script = """
+        tell application "System Events"
+            key code 126
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func arrowDown() {
+        let script = """
+        tell application "System Events"
+            key code 125
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func arrowLeft() {
+        let script = """
+        tell application "System Events"
+            key code 123
+        end tell
+        """
+        runAppleScript(script)
+    }
+
+    static func arrowRight() {
+        let script = """
+        tell application "System Events"
+            key code 124
         end tell
         """
         runAppleScript(script)
@@ -245,6 +290,26 @@ class Actions {
 
         downEvent.post(tap: .cghidEventTap)
         usleep(10000)  // 10ms between down and up for realistic click
+        upEvent.post(tap: .cghidEventTap)
+    }
+
+    static func leftClickDown() {
+        logEvent("Left click: down (drag start)")
+        guard let currentEvent = CGEvent(source: nil) else { return }
+        let pos = currentEvent.location
+
+        guard let downEvent = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown,
+                                      mouseCursorPosition: pos, mouseButton: .left) else { return }
+        downEvent.post(tap: .cghidEventTap)
+    }
+
+    static func leftClickUp() {
+        logEvent("Left click: up (drag end)")
+        guard let currentEvent = CGEvent(source: nil) else { return }
+        let pos = currentEvent.location
+
+        guard let upEvent = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp,
+                                    mouseCursorPosition: pos, mouseButton: .left) else { return }
         upEvent.post(tap: .cghidEventTap)
     }
 

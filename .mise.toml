@@ -3,6 +3,8 @@
 [tasks.build]
 description = "Build the PS5 controller utility"
 run = "swiftc -o ps5-remote main.swift Controller.swift Actions.swift Mapping.swift -framework IOKit -framework CoreGraphics -framework AppKit"
+sources = ["*.swift"]
+outputs = ["ps5-remote"]
 
 [tasks.run]
 description = "Run the PS5 controller utility"
@@ -20,6 +22,5 @@ run = "mise run clean && mise run build"
 [tasks.dev]
 description = "Watch and rebuild/rerun on changes"
 run = "mise run run"
-sources = ["*.swift"]
 
 
