@@ -17,8 +17,4 @@ run = "rm -f ps5-remote *.o *.swiftmodule"
 description = "Clean and build"
 run = "mise run clean && mise run build"
 
-[tasks.dev]
-description = "Watch and rebuild/rerun on changes"
-run = "mise run run"
-watch = ["*.swift"]
 
