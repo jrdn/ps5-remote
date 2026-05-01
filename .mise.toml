@@ -17,11 +17,3 @@ run = "rm -f ps5-remote *.o *.swiftmodule"
 description = "Clean and build"
 run = "mise run clean && mise run build"
 
-[tasks.stop]
-description = "Stop running process"
-run = "killall ps5-remote 2>/dev/null || true"
-
-[tasks.watch]
-description = "Watch files and rebuild/rerun on changes"
-run = "mise run stop && mise run build && mise run run"
-watch = ["*.swift"]
