@@ -10,7 +10,7 @@ outputs = ["ps5-remote"]
 description = "Run the PS5 controller utility"
 run = "./ps5-remote"
 depends = ["build"]
-sources = ["ps5-remote"]
+sources = ["*.swift"]
 
 [tasks.clean]
 description = "Remove built artifacts"
