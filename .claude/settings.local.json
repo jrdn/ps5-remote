@@ -12,7 +12,16 @@
       "Bash(osascript -e 'id of app \"Ghostty\"')",
       "Bash(mdls -name kMDItemCFBundleIdentifier /Applications/Ghostty.app)",
       "WebSearch",
-      "Bash(swiftc *)"
+      "Bash(swiftc *)",
+      "Bash(osascript *)",
+      "Bash(defaults read *)",
+      "Bash(shortcuts --help)",
+      "Bash(shortcuts help *)",
+      "Bash(shortcuts list *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:forums.macrumors.com)",
+      "WebFetch(domain:support.apple.com)",
+      "WebFetch(domain:talk.automators.fm)"
     ]
   }
 }
