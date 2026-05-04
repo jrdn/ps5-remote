@@ -58,7 +58,7 @@ var defaultMapping: [ControllerInput: Action] = [
     .button(.share):    { Actions.switchSpaceLeft() },
     .button(.options):  { Actions.switchSpaceRight() },
     .button(.r3):       { Actions.toggleVoiceControl() },
-    .button(.ps):       { Actions.startDictationPress() },
+    .button(.ps):       { Actions.startDictationPressPS() },
     .button(.touchpad): { Actions.toggleMissionControl() },
 
     .dpad(.up):    { Actions.arrowUp() },

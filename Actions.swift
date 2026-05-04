@@ -30,12 +30,20 @@ class Actions {
 
     static func switchSpaceLeft() {
         logEvent("Switching space left (Ctrl+Left)")
-        postKey(123, flags: .maskControl)
+        runAppleScript("""
+        tell application "System Events"
+            key code 123 using control down
+        end tell
+        """)
     }
 
     static func switchSpaceRight() {
         logEvent("Switching space right (Ctrl+Right)")
-        postKey(124, flags: .maskControl)
+        runAppleScript("""
+        tell application "System Events"
+            key code 124 using control down
+        end tell
+        """)
     }
 
     // MARK: - Key Events
@@ -44,13 +52,18 @@ class Actions {
     static func sendEnter()  { postKey(36) }
 
     static func startDictationPress() {
-        logEvent("Dictation: key down")
-        postKey(2, flags: [.maskCommand, .maskShift])
+        logEvent("Dictation: key down (L2, Cmd+Shift+Opt+F9)")
+        postKeyDown(101, flags: [.maskCommand, .maskShift, .maskAlternate])
     }
 
     static func startDictationRelease() {
-        logEvent("Dictation: key up")
-        postKey(2, flags: [.maskCommand, .maskShift])
+        logEvent("Dictation: key up (L2, Cmd+Shift+Opt+F9)")
+        postKeyUp(101, flags: [.maskCommand, .maskShift, .maskAlternate])
+    }
+
+    static func startDictationPressPS() {
+        logEvent("Dictation: toggle (PS, Cmd+Shift+Opt+F10)")
+        postKey(109, flags: [.maskCommand, .maskShift, .maskAlternate])
     }
 
     static func arrowUp()    { postKey(126) }
@@ -345,12 +358,54 @@ class Actions {
         let src = CGEventSource(stateID: .hidSystemState)
         guard let down = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true),
               let up = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false) else { return }
+        let mods = modifierKeyCodes(for: flags)
         if !flags.isEmpty {
-            down.flags = flags
-            up.flags = flags
+            down.flags = down.flags.union(flags)
+            up.flags = up.flags.union(flags)
+        }
+        for mod in mods {
+            guard let e = CGEvent(keyboardEventSource: src, virtualKey: mod, keyDown: true) else { continue }
+            e.flags = e.flags.union(flags)
+            e.post(tap: .cghidEventTap)
         }
         down.post(tap: .cghidEventTap)
         up.post(tap: .cghidEventTap)
+        for mod in mods.reversed() {
+            guard let e = CGEvent(keyboardEventSource: src, virtualKey: mod, keyDown: false) else { continue }
+            e.post(tap: .cghidEventTap)
+        }
+    }
+
+    private static func modifierKeyCodes(for flags: CGEventFlags) -> [CGKeyCode] {
+        var keys: [CGKeyCode] = []
+        if flags.contains(.maskCommand)  { keys.append(55) }
+        if flags.contains(.maskShift)    { keys.append(56) }
+        if flags.contains(.maskAlternate){ keys.append(58) }
+        if flags.contains(.maskControl)  { keys.append(59) }
+        return keys
+    }
+
+    private static func postKeyDown(_ keyCode: CGKeyCode, flags: CGEventFlags = []) {
+        let src = CGEventSource(stateID: .hidSystemState)
+        for mod in modifierKeyCodes(for: flags) {
+            guard let e = CGEvent(keyboardEventSource: src, virtualKey: mod, keyDown: true) else { continue }
+            e.flags = e.flags.union(flags)
+            e.post(tap: .cghidEventTap)
+        }
+        guard let down = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true) else { return }
+        if !flags.isEmpty { down.flags = down.flags.union(flags) }
+        down.post(tap: .cghidEventTap)
+    }
+
+    private static func postKeyUp(_ keyCode: CGKeyCode, flags: CGEventFlags = []) {
+        let src = CGEventSource(stateID: .hidSystemState)
+        guard let up = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false) else { return }
+        if !flags.isEmpty { up.flags = up.flags.union(flags) }
+        up.post(tap: .cghidEventTap)
+        for mod in modifierKeyCodes(for: flags).reversed() {
+            guard let e = CGEvent(keyboardEventSource: src, virtualKey: mod, keyDown: false) else { continue }
+            e.post(tap: .cghidEventTap)
+        }
     }
 
     private static func runAppleScript(_ script: String) {
