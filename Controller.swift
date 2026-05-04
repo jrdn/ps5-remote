@@ -13,80 +13,52 @@ class PS5Controller {
     private var deviceRef: IOHIDDevice?
     private var manager: IOHIDManager?
 
-    // PS5 controller IDs (Sony)
     private let PS5_VENDOR_ID: Int32 = 0x054C
-    // Product IDs vary by connection type:
-    // 0x05C5 = USB wired
-    // 0x0CE6 = Bluetooth wireless
+    // 0x05C5 = USB wired, 0x0CE6 = Bluetooth
     private let PS5_PRODUCT_IDS: [Int32] = [0x05C5, 0x0CE6]
 
-    // HID Usage Pages and Usages for PS5 buttons
-    private let BUTTON_USAGE_PAGE: UInt32 = 0x09  // Button
+    private let BUTTON_USAGE_PAGE: UInt32 = 0x09
     private let GENERIC_DESKTOP_PAGE: UInt32 = 0x01
 
-    // Button mappings
-    private let buttonNames: [UInt32: String] = [
-        0x01: "Square",
-        0x02: "X",
-        0x03: "Circle",
-        0x04: "Triangle",
-        0x05: "L1",
-        0x06: "R1",
-        0x07: "L2",
-        0x08: "R2",
-        0x09: "Share",
-        0x0A: "Options",
-        0x0B: "L3",
-        0x0C: "R3",
-        0x0D: "PS",
-        0x0E: "Touchpad"
+    private let buttonMap: [UInt32: Button] = [
+        0x01: .square,
+        0x02: .cross,
+        0x03: .circle,
+        0x04: .triangle,
+        0x05: .l1,
+        0x06: .r1,
+        0x07: .l2,
+        0x08: .r2,
+        0x09: .share,
+        0x0A: .options,
+        0x0B: .l3,
+        0x0C: .r3,
+        0x0D: .ps,
+        0x0E: .touchpad,
     ]
 
-    // Analog sticks and triggers
-    private let axisNames: [UInt32: String] = [
-        0x30: "Left Stick X",
-        0x31: "Left Stick Y",
-        0x32: "Right Stick X",
-        0x35: "Right Stick Y",
-        0x33: "L2 Trigger",
-        0x34: "R2 Trigger"
+    // Hat switch reports 0/2/4/6 for cardinal directions, 8 for neutral
+    private let dpadMap: [Int: StickDirection] = [
+        0: .up,
+        2: .right,
+        4: .down,
+        6: .left,
     ]
 
-    // D-pad (Hat Switch) - usage 0x39
-    private let dpadDirections: [Int: String] = [
-        0: "Up",
-        2: "Right",
-        4: "Down",
-        6: "Left",
-        8: "Neutral"
-    ]
+    private let STICK_DEADZONE: Int = 20
 
-    // Stick deadzone - values within this range of center (128) are ignored
-    private let STICK_DEADZONE: Int = 20  // ±20 from center
+    // Stick state — written on main RunLoop thread, read on timer thread; protected by stickLock
+    private let stickLock = NSLock()
+    private var leftStickX = 128
+    private var leftStickY = 128
+    private var rightStickX = 128
+    private var rightStickY = 128
 
-    // Track stick positions (0-255, center at 128)
-    private var leftStickX: Int = 128
-    private var leftStickY: Int = 128
-    private var rightStickX: Int = 128
-    private var rightStickY: Int = 128
-
-    // Track last stick directions for hysteresis (only dispatch on direction change)
-    private var lastLeftStickDir: String = "Neutral"
-    private var lastRightStickDir: String = "Neutral"
-
-    // Track last processed stick positions for smooth movement
-    private var lastProcessedLeftX = 128
-    private var lastProcessedLeftY = 128
-    private var lastProcessedRightX = 128
-    private var lastProcessedRightY = 128
+    // Direction hysteresis — main RunLoop thread only, no lock needed
+    private var lastLeftStickDir: StickDirection? = nil
+    private var lastRightStickDir: StickDirection? = nil
 
     private var updateTimer: DispatchSourceTimer?
-    private let stickLock = NSLock()
-    private var cachedLeftStickX = 128
-    private var cachedLeftStickY = 128
-    private var cachedRightStickX = 128
-    private var cachedRightStickY = 128
-
 
     init() {
         setupHIDManager()
@@ -104,48 +76,38 @@ class PS5Controller {
         self.updateTimer = timer
     }
 
+    // Runs on timer thread — all shared state accessed under stickLock
     private func updateMouseAndScroll() {
-        if !r2Active {
-            return
-        }
-
         stickLock.lock()
-        let leftX = cachedLeftStickX
-        let leftY = cachedLeftStickY
-        let rightX = cachedRightStickX
-        let rightY = cachedRightStickY
+        let isR2 = r2Active
+        let leftX = leftStickX
+        let leftY = leftStickY
+        let rightX = rightStickX
+        let rightY = rightStickY
         stickLock.unlock()
 
-        // Send left stick mouse movement continuously when outside deadzone
+        guard isR2 else { return }
+
         if !isStickInDeadzone(leftX) || !isStickInDeadzone(leftY) {
             Actions.moveMouseByStick(x: leftX, y: leftY)
         }
-
-        // Send right stick scrolling continuously when outside deadzone
         if !isStickInDeadzone(rightX) || !isStickInDeadzone(rightY) {
             Actions.scrollByStick(x: rightX, y: rightY)
         }
     }
 
     private func isStickInDeadzone(_ value: Int) -> Bool {
-        let center = 128
-        return abs(value - center) < STICK_DEADZONE
+        abs(value - 128) < STICK_DEADZONE
     }
 
-    private func stickDirection(x: Int, y: Int) -> String {
+    private func stickDirection(x: Int, y: Int) -> StickDirection? {
         let dx = x - 128
         let dy = y - 128
-
-        // Check if both axes are in deadzone
-        if abs(dx) < STICK_DEADZONE && abs(dy) < STICK_DEADZONE {
-            return "Neutral"
-        }
-
-        // Determine direction based on which axis has larger magnitude
+        guard abs(dx) >= STICK_DEADZONE || abs(dy) >= STICK_DEADZONE else { return nil }
         if abs(dx) >= abs(dy) {
-            return dx > 0 ? "Right" : "Left"
+            return dx > 0 ? .right : .left
         } else {
-            return dy > 0 ? "Down" : "Up"
+            return dy > 0 ? .down : .up
         }
     }
 
@@ -153,27 +115,22 @@ class PS5Controller {
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
         self.manager = manager
 
-        // Set up matching criteria - match Sony vendor ID (covers all variants)
-        let matching: [String: Any] = [
-            kIOHIDVendorIDKey: PS5_VENDOR_ID
-        ]
+        // Match each PS5 product ID explicitly to avoid seizing unrelated Sony devices
+        let matchingArray = PS5_PRODUCT_IDS.map { pid in
+            [kIOHIDVendorIDKey: PS5_VENDOR_ID, kIOHIDProductIDKey: pid] as [String: Any]
+        }
+        IOHIDManagerSetDeviceMatchingMultiple(manager, matchingArray as CFArray)
 
-        let matchingCF = matching as CFDictionary
-        IOHIDManagerSetDeviceMatching(manager, matchingCF)
-
-        // Set up callbacks
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
 
         IOHIDManagerRegisterDeviceMatchingCallback(manager, { inContext, inResult, inSender, inDevice in
             guard let context = inContext else { return }
-            let controller = Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue()
-            controller.deviceConnected(inDevice)
+            Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue().deviceConnected(inDevice)
         }, selfPtr)
 
         IOHIDManagerRegisterDeviceRemovalCallback(manager, { inContext, inResult, inSender, inDevice in
             guard let context = inContext else { return }
-            let controller = Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue()
-            controller.deviceDisconnected(inDevice)
+            Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue().deviceDisconnected(inDevice)
         }, selfPtr)
 
         IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
@@ -184,12 +141,10 @@ class PS5Controller {
         print("✓ PS5 Controller connected")
         self.deviceRef = device
 
-        // Register input callback
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
         IOHIDDeviceRegisterInputValueCallback(device, { inContext, inResult, inSender, inValue in
             guard let context = inContext else { return }
-            let controller = Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue()
-            controller.handleInput(inValue)
+            Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue().handleInput(inValue)
         }, selfPtr)
 
         IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
@@ -200,101 +155,76 @@ class PS5Controller {
         self.deviceRef = nil
     }
 
+    // Runs on main RunLoop thread — r2Active and stick values written here, read on timer thread via stickLock
     private func handleInput(_ value: IOHIDValue) {
         let element = IOHIDValueGetElement(value)
         let intValue = IOHIDValueGetIntegerValue(value)
         let usagePage = IOHIDElementGetUsagePage(element)
         let usage = IOHIDElementGetUsage(element)
 
-        // Ignore zero values on analog inputs to reduce noise (but not D-pad)
-        if (usagePage == GENERIC_DESKTOP_PAGE) && intValue == 0 && usage != 0x39 {
+        if debugMode {
+            print("HID page=0x\(String(usagePage, radix: 16)) usage=0x\(String(usage, radix: 16)) value=\(intValue)")
+        }
+
+        // Ignore zero values on analog inputs to reduce noise (D-pad excluded)
+        if usagePage == GENERIC_DESKTOP_PAGE && intValue == 0 && usage != 0x39 {
             return
         }
 
-        // Handle button presses and releases
         if usagePage == BUTTON_USAGE_PAGE {
-            if let buttonName = buttonNames[usage] {
-                // R2 button is the modifier layer toggle
-                if buttonName == "R2" {
-                    r2Active = intValue == 1
-                    return
-                }
-
-                // Dispatch on press and release
-                if intValue == 1 {
-                    dispatch(input: .button(buttonName))
-                } else if intValue == 0 {
-                    dispatch(input: .buttonReleased(buttonName))
-                }
+            guard let button = buttonMap[usage] else { return }
+            if button == .r2 {
+                // Lock to synchronize with timer thread reads of r2Active
+                stickLock.lock()
+                r2Active = intValue == 1
+                stickLock.unlock()
+                return
             }
+            dispatch(input: intValue == 1 ? .button(button) : .buttonReleased(button))
             return
         }
 
-        // Handle D-pad (on state change, not continuously)
         if usagePage == GENERIC_DESKTOP_PAGE && usage == 0x39 {
-            if let direction = dpadDirections[Int(intValue)] {
-                // Only dispatch non-neutral states
-                if direction != "Neutral" {
-                    dispatch(input: .dpad(direction))
-                }
+            if let direction = dpadMap[Int(intValue)] {
+                dispatch(input: .dpad(direction))
             }
             return
         }
 
-
-        // Handle analog sticks
         if usagePage == GENERIC_DESKTOP_PAGE {
-            // Left stick (usage 0x30=X, 0x31=Y)
+            // Left stick: X=0x30, Y=0x31
             if usage == 0x30 || usage == 0x31 {
                 let stickValue = Int(intValue)
-                if usage == 0x30 {
-                    leftStickX = stickValue
-                    stickLock.lock()
-                    cachedLeftStickX = stickValue
-                    stickLock.unlock()
-                } else {
-                    leftStickY = stickValue
-                    stickLock.lock()
-                    cachedLeftStickY = stickValue
-                    stickLock.unlock()
-                }
+                stickLock.lock()
+                if usage == 0x30 { leftStickX = stickValue } else { leftStickY = stickValue }
+                stickLock.unlock()
 
-                // In normal mode: dispatch directional events on direction change
                 if !r2Active {
-                    let dir = stickDirection(x: leftStickX, y: leftStickY)
+                    let x = usage == 0x30 ? stickValue : leftStickX
+                    let y = usage == 0x31 ? stickValue : leftStickY
+                    let dir = stickDirection(x: x, y: y)
                     if dir != lastLeftStickDir {
                         lastLeftStickDir = dir
-                        if dir != "Neutral" {
-                            dispatch(input: .leftStick(dir))
-                        }
+                        if let d = dir { dispatch(input: .leftStick(d)) }
                     }
                 }
                 return
             }
 
-            // Right stick (usage 0x32=X, 0x35=Y)
+            // Right stick: X=0x32, Y=0x35
             if usage == 0x32 || usage == 0x35 {
                 let stickValue = Int(intValue)
-                if usage == 0x32 {
-                    rightStickX = stickValue
-                    stickLock.lock()
-                    cachedRightStickX = stickValue
-                    stickLock.unlock()
-                } else {
-                    rightStickY = stickValue
-                    stickLock.lock()
-                    cachedRightStickY = stickValue
-                    stickLock.unlock()
-                }
+                stickLock.lock()
+                if usage == 0x32 { rightStickX = stickValue } else { rightStickY = stickValue }
+                stickLock.unlock()
 
-                // In normal mode: dispatch directional events on direction change
                 if !r2Active {
-                    let dir = stickDirection(x: rightStickX, y: rightStickY)
+                    let x = usage == 0x32 ? stickValue : rightStickX
+                    let y = usage == 0x35 ? stickValue : rightStickY
+                    let dir = stickDirection(x: x, y: y)
                     if dir != lastRightStickDir {
                         lastRightStickDir = dir
-                        if dir != "Neutral" {
-                            dispatch(input: .rightStick(dir))
-                        }
+                        if let d = dir { dispatch(input: .rightStick(d)) }
                     }
                 }
                 return

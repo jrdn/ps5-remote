@@ -1,122 +1,108 @@
 import Foundation
 
-enum ControllerInput: Hashable {
-    case button(String)
-    case buttonReleased(String)
-    case dpad(String)
-    case leftStick(String)   // "Up", "Down", "Left", "Right"
-    case rightStick(String)  // "Up", "Down", "Left", "Right"
+enum Button: Hashable {
+    case square, cross, circle, triangle
+    case l1, r1, l2, r2
+    case share, options
+    case l3, r3
+    case ps, touchpad
 }
 
-// Global state for R2 modifier layer (set by Controller.swift)
+enum StickDirection: Hashable {
+    case up, down, left, right
+}
+
+enum ControllerInput: Hashable {
+    case button(Button)
+    case buttonReleased(Button)
+    case dpad(StickDirection)
+    case leftStick(StickDirection)
+    case rightStick(StickDirection)
+}
+
+// Written on main RunLoop thread (HID callback), read on timer thread — protected by Controller's stickLock
 var r2Active: Bool = false
 
 var defaultMapping: [ControllerInput: Action] = [
-    // Buttons
-    .button("Square"): { },
+    .button(.cross):    { Actions.sendEnter() },
+    .button(.circle):   { Actions.sendEscape() },
+    .button(.triangle): {
+        if Actions.isActiveBrowser() { Actions.closeTab() }
+    },
 
-    .button("X"):        { Actions.sendEnter() },
-    .button("Circle"):   { Actions.sendEscape() },
-    .button("Triangle"): { },
+    .button(.l1): {
+        if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+            Actions.cmdShiftBacktick()
+        } else if Actions.isActiveBrowser() {
+            Actions.browserPrevTab()
+        } else {
+            Actions.leftClickDown()
+        }
+    },
+    .buttonReleased(.l1): {
+        if !Actions.isActiveBrowser() && !Actions.isActiveApp("ghostty") && !Actions.isActiveApp("iterm2") {
+            Actions.leftClickUp()
+        }
+    },
+    .button(.r1): {
+        if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+            Actions.cmdBacktick()
+        } else if Actions.isActiveBrowser() {
+            Actions.browserNextTab()
+        }
+    },
 
-    .button("L1"):       { Actions.leftClickDown() },
-    .buttonReleased("L1"): { Actions.leftClickUp() },
-    .button("R1"):       { },
-    .button("L2"):       { Actions.startDictationPress() },
-    .buttonReleased("L2"): { Actions.startDictationRelease() },
-    .button("R2"):       { },
+    .button(.l2):         { Actions.startDictationPress() },
+    .buttonReleased(.l2): { Actions.startDictationRelease() },
 
-    .button("Share"):    { Actions.switchSpaceLeft() },
-    .button("Options"):  { Actions.switchSpaceRight() },
+    .button(.share):    { Actions.switchSpaceLeft() },
+    .button(.options):  { Actions.switchSpaceRight() },
+    .button(.r3):       { Actions.toggleVoiceControl() },
+    .button(.ps):       { Actions.startDictationPress() },
+    .button(.touchpad): { Actions.toggleMissionControl() },
 
-    .button("L3"):       { },
-    .button("R3"):       { },
+    .dpad(.up):    { Actions.arrowUp() },
+    .dpad(.down):  { Actions.arrowDown() },
+    .dpad(.left):  { Actions.arrowLeft() },
+    .dpad(.right): { Actions.arrowRight() },
 
-    .button("PS"):       { Actions.startDictationPress() },
-    .button("Touchpad"): { Actions.toggleMissionControl() },
-
-    // D-Pad
-    .dpad("Up"):    { Actions.arrowUp() },
-    .dpad("Down"):  { Actions.arrowDown() },
-    .dpad("Left"):  { Actions.arrowLeft() },
-    .dpad("Right"): { Actions.arrowRight() },
-
-    // Left stick (directional events when R2 not held)
-    .leftStick("Up"): {
+    .leftStick(.up): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowUp()
-        } else if Actions.isActiveApp("ghostty") {
-            Actions.cmdBacktick()
+        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+            Actions.iterm2PaneUp()
         }
     },
-    .leftStick("Down"): {
+    .leftStick(.down): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowDown()
-        } else if Actions.isActiveApp("ghostty") {
-            Actions.cmdShiftBacktick()
+        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+            Actions.iterm2PaneDown()
         }
     },
-    .leftStick("Left"): {
+    .leftStick(.left): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowLeft()
-        } else if Actions.isActiveApp("ghostty") {
-            Actions.controlShiftTab()
+        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+            Actions.iterm2PaneLeft()
         }
     },
-    .leftStick("Right"): {
+    .leftStick(.right): {
         if Actions.isActiveApp("Emacs") {
             Actions.shiftArrowRight()
-        } else if Actions.isActiveApp("ghostty") {
-            Actions.controlTab()
+        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+            Actions.iterm2PaneRight()
         }
     },
-
-    // Right stick (directional events when R2 not held)
-    .rightStick("Up"):    { },
-    .rightStick("Down"):  { },
-    .rightStick("Left"):  { },
-    .rightStick("Right"): { },
 ]
 
 var r2Mapping: [ControllerInput: Action] = [
-    // Buttons - custom R2 layer actions
-    .button("Square"): { },
-    .button("X"):      { },
-    .button("Circle"): { },
-    .button("Triangle"): { },
-
-    .button("L1"): { Actions.leftClickDown() },
-    .buttonReleased("L1"): { Actions.leftClickUp() },
-    .button("R1"): { Actions.rightClick() },
-    .button("L2"): { Actions.startDictationPress() },
-    .buttonReleased("L2"): { Actions.startDictationRelease() },
-    .button("R2"): { },
-
-    .button("Share"):    { },
-    .button("Options"):  { },
-
-    .button("L3"): { },
-    .button("R3"): { },
-
-    .button("PS"):       { },
-    .button("Touchpad"): { },
-
-    // D-Pad in R2 mode
-    .dpad("Up"):    { },
-    .dpad("Down"):  { },
-    .dpad("Left"):  { },
-    .dpad("Right"): { },
-
-    // Sticks in R2 mode (note: mouse/scroll movement handled directly in Controller.swift)
-    .leftStick("Up"):    { },
-    .leftStick("Down"):  { },
-    .leftStick("Left"):  { },
-    .leftStick("Right"): { },
-
-    .rightStick("Up"):    { },
-    .rightStick("Down"):  { },
-    .rightStick("Left"):  { },
-    .rightStick("Right"): { },
+    .button(.square):         { Actions.middleClick() },
+    .button(.l1):             { Actions.leftClickDown() },
+    .buttonReleased(.l1):     { Actions.leftClickUp() },
+    .button(.r1):             { Actions.rightClick() },
+    .button(.l2):             { Actions.startDictationPress() },
+    .buttonReleased(.l2):     { Actions.startDictationRelease() },
 ]
 
 func dispatch(input: ControllerInput) {

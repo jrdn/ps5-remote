@@ -6,11 +6,15 @@
 |-------|--------|
 | X | Enter |
 | Circle | Escape |
+| Triangle | Close Tab (Cmd+W) *(Firefox/Chrome/Safari only)* |
+| L1 | Previous Tab (Cmd+Shift+[) *(browsers)* / Left Click Hold *(elsewhere)* |
+| R1 | Next Tab (Cmd+Shift+]) *(Firefox/Chrome/Safari only)* |
 | L2 | Start Dictation (Cmd+Shift+D) |
 | Share | Switch Space Left (Ctrl+Left) |
 | Options | Switch Space Right (Ctrl+Right) |
 | PS | Start Dictation (Cmd+Shift+D) |
 | Touchpad | Toggle Mission Control |
+| R3 (right stick click) | Toggle Voice Control |
 | **D-Pad Left** | Cmd+[ (Ghostty only) |
 | **D-Pad Right** | Cmd+] (Ghostty only) |
 | **Left Stick Up** | Shift+Up (Emacs) / Cmd+` (Ghostty) |
@@ -24,6 +28,7 @@ Holding R2 activates an alternate layer for different actions:
 
 | Input | Action |
 |-------|--------|
+| Square | Middle Click |
 | L1 | Left Click |
 | R1 | Right Click |
 | Left Stick | Mouse Movement |
@@ -65,4 +70,4 @@ When R2 is held:
   - Right: Shift+Right
 
 ## Unused Buttons
-- Square, Triangle, L1, R1 (normal mode), L3, R3
+- Square (normal mode), L3, R3

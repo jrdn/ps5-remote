@@ -10,7 +10,6 @@ class Actions {
         print("[\(timestamp)] ACTION: \(message)")
     }
 
-    // Get info about the active application
     static func getActiveAppBundleId() -> String? {
         NSWorkspace.shared.frontmostApplication?.bundleIdentifier
     }
@@ -23,261 +22,235 @@ class Actions {
         getActiveAppBundleId()?.contains(bundleId) ?? false
     }
 
+    static func isActiveBrowser() -> Bool {
+        isActiveApp("firefox") || isActiveApp("Chrome") || isActiveApp("Safari")
+    }
 
-    // macOS-specific actions using AppleScript (more reliable)
+    // MARK: - Space / Window Management
+
     static func switchSpaceLeft() {
         logEvent("Switching space left (Ctrl+Left)")
-        let script = """
-        tell application "System Events"
-            key code 123 using control down
-        end tell
-        """
-        runAppleScript(script)
+        postKey(123, flags: .maskControl)
     }
 
     static func switchSpaceRight() {
         logEvent("Switching space right (Ctrl+Right)")
-        let script = """
-        tell application "System Events"
-            key code 124 using control down
-        end tell
-        """
-        runAppleScript(script)
+        postKey(124, flags: .maskControl)
     }
 
+    // MARK: - Key Events
 
-
-    static func sendEscape() {
-        let script = """
-        tell application "System Events"
-            key code 53
-        end tell
-        """
-        runAppleScript(script)
-    }
-
-    static func sendEnter() {
-        let script = """
-        tell application "System Events"
-            key code 36
-        end tell
-        """
-        runAppleScript(script)
-    }
+    static func sendEscape() { postKey(53) }
+    static func sendEnter()  { postKey(36) }
 
     static func startDictationPress() {
         logEvent("Dictation: key down")
-        let script = """
-        tell application "System Events"
-            key code 2 using {command down, shift down}
-        end tell
-        """
-        runAppleScript(script)
+        postKey(2, flags: [.maskCommand, .maskShift])
     }
 
     static func startDictationRelease() {
         logEvent("Dictation: key up")
-        let script = """
-        tell application "System Events"
-            key code 2 using {command down, shift down}
-        end tell
-        """
-        runAppleScript(script)
+        postKey(2, flags: [.maskCommand, .maskShift])
     }
 
-    static func toggleMissionControl() {
-        logEvent("Toggling Mission Control")
-        let script = """
-        tell application "Mission Control"
-            activate
-        end tell
-        """
-        runAppleScript(script)
-    }
-
-    static func sendKeyWithModifier(_ keyCode: Int, modifier: String) {
-        let script = """
-        tell application "System Events"
-            key code \(keyCode) using \(modifier) down
-        end tell
-        """
-        runAppleScript(script)
-    }
-
-    static func arrowUp() {
-        let script = """
-        tell application "System Events"
-            key code 126
-        end tell
-        """
-        runAppleScript(script)
-    }
-
-    static func arrowDown() {
-        let script = """
-        tell application "System Events"
-            key code 125
-        end tell
-        """
-        runAppleScript(script)
-    }
-
-    static func arrowLeft() {
-        let script = """
-        tell application "System Events"
-            key code 123
-        end tell
-        """
-        runAppleScript(script)
-    }
-
-    static func arrowRight() {
-        let script = """
-        tell application "System Events"
-            key code 124
-        end tell
-        """
-        runAppleScript(script)
-    }
+    static func arrowUp()    { postKey(126) }
+    static func arrowDown()  { postKey(125) }
+    static func arrowLeft()  { postKey(123) }
+    static func arrowRight() { postKey(124) }
 
     static func shiftArrowUp() {
         logEvent("\(getActiveAppName() ?? "unknown"): Shift+Up")
-        sendKeyWithModifier(126, modifier: "shift")  // Up arrow = 126
+        postKey(126, flags: .maskShift)
     }
 
     static func shiftArrowDown() {
         logEvent("\(getActiveAppName() ?? "unknown"): Shift+Down")
-        sendKeyWithModifier(125, modifier: "shift")  // Down arrow = 125
+        postKey(125, flags: .maskShift)
     }
 
     static func shiftArrowLeft() {
         logEvent("\(getActiveAppName() ?? "unknown"): Shift+Left")
-        sendKeyWithModifier(123, modifier: "shift")  // Left arrow = 123
+        postKey(123, flags: .maskShift)
     }
 
     static func shiftArrowRight() {
         logEvent("\(getActiveAppName() ?? "unknown"): Shift+Right")
-        sendKeyWithModifier(124, modifier: "shift")  // Right arrow = 124
+        postKey(124, flags: .maskShift)
+    }
+
+    static func browserNextTab() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Shift+] (next tab)")
+        postKey(30, flags: [.maskCommand, .maskShift])
+    }
+
+    static func browserPrevTab() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Shift+[ (prev tab)")
+        postKey(33, flags: [.maskCommand, .maskShift])
+    }
+
+    static func closeTab() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+W (close tab)")
+        postKey(13, flags: .maskCommand)
     }
 
     static func cmdBracketLeft() {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+[")
-        let script = """
-        tell application "System Events"
-            key code 33 using command down
-        end tell
-        """
-        runAppleScript(script)
+        postKey(33, flags: .maskCommand)
     }
 
     static func cmdBracketRight() {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+]")
-        let script = """
-        tell application "System Events"
-            key code 30 using command down
-        end tell
-        """
-        runAppleScript(script)
+        postKey(30, flags: .maskCommand)
     }
 
     static func cmdBacktick() {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+`")
-        let script = """
-        tell application "System Events"
-            key code 50 using command down
-        end tell
-        """
-        runAppleScript(script)
+        postKey(50, flags: .maskCommand)
     }
 
     static func cmdShiftBacktick() {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Shift+`")
-        let script = """
-        tell application "System Events"
-            key code 50 using {command down, shift down}
-        end tell
-        """
-        runAppleScript(script)
+        postKey(50, flags: [.maskCommand, .maskShift])
     }
 
     static func controlTab() {
         logEvent("\(getActiveAppName() ?? "unknown"): Control+Tab")
-        let script = """
-        tell application "System Events"
-            key code 48 using control down
-        end tell
-        """
-        runAppleScript(script)
+        postKey(48, flags: .maskControl)
     }
 
     static func controlShiftTab() {
         logEvent("\(getActiveAppName() ?? "unknown"): Control+Shift+Tab")
-        let script = """
-        tell application "System Events"
-            key code 48 using {control down, shift down}
+        postKey(48, flags: [.maskControl, .maskShift])
+    }
+
+    // MARK: - iTerm2
+
+    static func iterm2NextTab() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Shift+] (next tab)")
+        postKey(30, flags: [.maskCommand, .maskShift])
+    }
+
+    static func iterm2PrevTab() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Shift+[ (prev tab)")
+        postKey(33, flags: [.maskCommand, .maskShift])
+    }
+
+    static func iterm2PaneLeft() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Opt+Left (pane left)")
+        postKey(123, flags: [.maskCommand, .maskAlternate])
+    }
+
+    static func iterm2PaneRight() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Opt+Right (pane right)")
+        postKey(124, flags: [.maskCommand, .maskAlternate])
+    }
+
+    static func iterm2PaneUp() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Opt+Up (pane up)")
+        postKey(126, flags: [.maskCommand, .maskAlternate])
+    }
+
+    static func iterm2PaneDown() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Opt+Down (pane down)")
+        postKey(125, flags: [.maskCommand, .maskAlternate])
+    }
+
+    // MARK: - System Actions (require AppleScript or Shortcuts)
+
+    // Set at startup by checkVoiceControlShortcuts()
+    static var voiceControlShortcutsAvailable = false
+
+    static func checkVoiceControlShortcuts() {
+        let task = Process()
+        task.launchPath = "/usr/bin/shortcuts"
+        task.arguments = ["list"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = Pipe()  // suppress shortcuts CLI noise
+        task.launch()
+        task.waitUntilExit()
+
+        let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        let names = Set(output.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) })
+        voiceControlShortcutsAvailable = names.contains("VoiceControl On") && names.contains("VoiceControl Off")
+
+        if !voiceControlShortcutsAvailable {
+            FileHandle.standardError.write(Data("""
+            [WARNING] Shortcuts 'VoiceControl On' / 'VoiceControl Off' not found.
+                      Falling back to fragile Siri-based toggle.
+                      To use the reliable method, create both shortcuts in Shortcuts.app.\n
+            """.utf8))
+        }
+    }
+
+    static func toggleMissionControl() {
+        logEvent("Toggling Mission Control")
+        runAppleScript("""
+        tell application "Mission Control"
+            activate
         end tell
-        """
-        runAppleScript(script)
+        """)
     }
 
-    // Stick-to-mouse conversion
-    private static let MOUSE_SENSITIVITY: Double = 0.2
-    private static let SCROLL_SENSITIVITY: Double = 0.03
-    private static var scrollEventCounter = 0
+    static func toggleVoiceControl() {
+        let check = Process()
+        check.launchPath = "/usr/bin/defaults"
+        check.arguments = ["read", "com.apple.Accessibility", "CommandAndControlEnabled"]
+        let pipe = Pipe()
+        check.standardOutput = pipe
+        check.launch()
+        check.waitUntilExit()
 
-    static func moveMouseByStick(x: Int, y: Int) {
-        // Convert 0-255 to delta (-128 to 127)
-        let deltaX = Double(x - 128) * MOUSE_SENSITIVITY
-        let deltaY = Double(y - 128) * MOUSE_SENSITIVITY
+        let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        let isEnabled = output.trimmingCharacters(in: .whitespacesAndNewlines) == "1"
 
-        // Skip if movement is negligible
-        if abs(deltaX) < 0.5 && abs(deltaY) < 0.5 {
-            return
+        if voiceControlShortcutsAvailable {
+            let shortcutName = isEnabled ? "VoiceControl Off" : "VoiceControl On"
+            logEvent("Running shortcut: \(shortcutName)")
+            let task = Process()
+            task.launchPath = "/usr/bin/shortcuts"
+            task.arguments = ["run", shortcutName]
+            task.launch()
+        } else {
+            let command = isEnabled ? "turn off voice control" : "turn on voice control"
+            logEvent("Asking Siri to \(command) (fallback)")
+            runAppleScript("""
+            tell application "System Events"
+                tell process "SystemUIServer"
+                    click (first menu bar item of menu bar 1 whose description contains "Siri")
+                end tell
+            end tell
+            delay 0.5
+            tell application "System Events"
+                tell process "Siri"
+                    keystroke "\(command)"
+                    delay 0.2
+                    key code 36
+                    delay 1.2
+                    key code 53
+                end tell
+            end tell
+            """)
         }
+    }
 
-        // Get current mouse position
+    // MARK: - Mouse Clicks
+
+    static func middleClick() {
+        logEvent("Middle click")
         guard let currentEvent = CGEvent(source: nil) else { return }
-        let currentPos = currentEvent.location
+        let pos = currentEvent.location
 
-        // Calculate new position
-        let newPos = CGPoint(
-            x: currentPos.x + deltaX,
-            y: currentPos.y + deltaY
-        )
+        guard let downEvent = CGEvent(mouseEventSource: nil, mouseType: .otherMouseDown,
+                                      mouseCursorPosition: pos, mouseButton: .center),
+              let upEvent = CGEvent(mouseEventSource: nil, mouseType: .otherMouseUp,
+                                    mouseCursorPosition: pos, mouseButton: .center) else { return }
 
-        // Post mouse move event
-        guard let moveEvent = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved,
-                                      mouseCursorPosition: newPos, mouseButton: .left) else { return }
-        moveEvent.post(tap: .cghidEventTap)
+        downEvent.post(tap: .cghidEventTap)
+        usleep(10000)
+        upEvent.post(tap: .cghidEventTap)
     }
 
-    static func scrollByStick(x: Int, y: Int) {
-        // Throttle scroll events to every 4th update (15Hz instead of 60Hz) for slower scrolling
-        scrollEventCounter += 1
-        if scrollEventCounter % 4 != 0 {
-            return
-        }
-
-        // Convert 0-255 to scroll deltas (-128 to 127), negated for natural scroll direction
-        let scrollY = -Int32(Double(y - 128) * SCROLL_SENSITIVITY)
-        let scrollX = -Int32(Double(x - 128) * SCROLL_SENSITIVITY)
-
-        // Skip if movement is negligible
-        if abs(scrollY) < 1 && abs(scrollX) < 1 {
-            return
-        }
-
-        // Post scroll wheel event (vertical scroll is wheel1, horizontal is wheel2)
-        guard let scrollEvent = CGEvent(scrollWheelEvent2Source: nil,
-                                       units: .line,
-                                       wheelCount: 2,
-                                       wheel1: scrollY,
-                                       wheel2: scrollX,
-                                       wheel3: 0) else { return }
-        scrollEvent.post(tap: .cghidEventTap)
-    }
-
-    // Mouse clicks
     static func leftClick() {
         logEvent("Left click")
         guard let currentEvent = CGEvent(source: nil) else { return }
@@ -289,7 +262,7 @@ class Actions {
                                     mouseCursorPosition: pos, mouseButton: .left) else { return }
 
         downEvent.post(tap: .cghidEventTap)
-        usleep(10000)  // 10ms between down and up for realistic click
+        usleep(10000)
         upEvent.post(tap: .cghidEventTap)
     }
 
@@ -324,8 +297,60 @@ class Actions {
                                     mouseCursorPosition: pos, mouseButton: .right) else { return }
 
         downEvent.post(tap: .cghidEventTap)
-        usleep(10000)  // 10ms between down and up for realistic click
+        usleep(10000)
         upEvent.post(tap: .cghidEventTap)
+    }
+
+    // MARK: - Stick-to-Mouse/Scroll
+
+    private static let MOUSE_SENSITIVITY: Double = 0.2
+    private static let SCROLL_SENSITIVITY: Double = 0.03
+    private static var scrollEventCounter = 0
+
+    static func moveMouseByStick(x: Int, y: Int) {
+        let deltaX = Double(x - 128) * MOUSE_SENSITIVITY
+        let deltaY = Double(y - 128) * MOUSE_SENSITIVITY
+        if abs(deltaX) < 0.5 && abs(deltaY) < 0.5 { return }
+
+        guard let currentEvent = CGEvent(source: nil) else { return }
+        let currentPos = currentEvent.location
+        let newPos = CGPoint(x: currentPos.x + deltaX, y: currentPos.y + deltaY)
+
+        guard let moveEvent = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved,
+                                      mouseCursorPosition: newPos, mouseButton: .left) else { return }
+        moveEvent.post(tap: .cghidEventTap)
+    }
+
+    static func scrollByStick(x: Int, y: Int) {
+        // Throttle to 15Hz (every 4th frame) for slower, smoother scrolling
+        scrollEventCounter += 1
+        guard scrollEventCounter % 4 == 0 else { return }
+
+        let scrollY = -Int32(Double(y - 128) * SCROLL_SENSITIVITY)
+        let scrollX = -Int32(Double(x - 128) * SCROLL_SENSITIVITY)
+        if abs(scrollY) < 1 && abs(scrollX) < 1 { return }
+
+        guard let scrollEvent = CGEvent(scrollWheelEvent2Source: nil,
+                                       units: .line,
+                                       wheelCount: 2,
+                                       wheel1: scrollY,
+                                       wheel2: scrollX,
+                                       wheel3: 0) else { return }
+        scrollEvent.post(tap: .cghidEventTap)
+    }
+
+    // MARK: - Helpers
+
+    private static func postKey(_ keyCode: CGKeyCode, flags: CGEventFlags = []) {
+        let src = CGEventSource(stateID: .hidSystemState)
+        guard let down = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: true),
+              let up = CGEvent(keyboardEventSource: src, virtualKey: keyCode, keyDown: false) else { return }
+        if !flags.isEmpty {
+            down.flags = flags
+            up.flags = flags
+        }
+        down.post(tap: .cghidEventTap)
+        up.post(tap: .cghidEventTap)
     }
 
     private static func runAppleScript(_ script: String) {
@@ -334,5 +359,4 @@ class Actions {
         task.arguments = ["-e", script]
         task.launch()
     }
-
 }
