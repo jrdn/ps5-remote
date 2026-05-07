@@ -19,7 +19,7 @@ class Actions {
     }
 
     static func isActiveApp(_ bundleId: String) -> Bool {
-        getActiveAppBundleId()?.contains(bundleId) ?? false
+        getActiveAppBundleId()?.localizedCaseInsensitiveContains(bundleId) ?? false
     }
 
     static func isActiveBrowser() -> Bool {
@@ -51,23 +51,75 @@ class Actions {
     static func sendEscape() { postKey(53) }
     static func sendEnter()  { postKey(36) }
 
+    private static func dictationToggle() {
+        runAppleScript("""
+        tell application "System Events"
+            key code 109 using {command down, option down, control down}
+        end tell
+        """)
+    }
+
     static func startDictationPress() {
-        logEvent("Dictation: key down (L2, Cmd+Shift+Opt+F9)")
-        postKeyDown(101, flags: [.maskCommand, .maskShift, .maskAlternate])
+        logEvent("Dictation: start (L2 press, Cmd+Shift+Opt+F9 toggle)")
+        dictationToggle()
     }
 
     static func startDictationRelease() {
-        logEvent("Dictation: key up (L2, Cmd+Shift+Opt+F9)")
-        postKeyUp(101, flags: [.maskCommand, .maskShift, .maskAlternate])
+        logEvent("Dictation: stop (L2 release, Cmd+Shift+Opt+F9 toggle)")
+        dictationToggle()
     }
 
     static func startDictationPressPS() {
         logEvent("Dictation: toggle (PS, Cmd+Shift+Opt+F10)")
-        postKey(109, flags: [.maskCommand, .maskShift, .maskAlternate])
+        runAppleScript("""
+        tell application "System Events"
+            key code 109 using {command down, shift down, option down}
+        end tell
+        """)
+    }
+
+    static func controlMDown() {
+        logEvent("Control+M: key down")
+        postKeyDown(46, flags: .maskControl)
+    }
+
+    static func controlMUp() {
+        logEvent("Control+M: key up")
+        postKeyUp(46, flags: .maskControl)
+    }
+
+    static func cmdDDown() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+D key down")
+        postKeyDown(2, flags: .maskCommand)
+    }
+
+    static func cmdDUp() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+D key up")
+        postKeyUp(2, flags: .maskCommand)
+    }
+
+    static func spaceDown() {
+        logEvent("Space: key down")
+        postKeyDown(49)
+    }
+
+    static func spaceUp() {
+        logEvent("Space: key up")
+        postKeyUp(49)
     }
 
     static func arrowUp()    { postKey(126) }
     static func arrowDown()  { postKey(125) }
+
+    static func optArrowUp() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Opt+Up")
+        postKey(126, flags: .maskAlternate)
+    }
+
+    static func optArrowDown() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Opt+Down")
+        postKey(125, flags: .maskAlternate)
+    }
     static func arrowLeft()  { postKey(123) }
     static func arrowRight() { postKey(124) }
 
@@ -106,6 +158,11 @@ class Actions {
         postKey(13, flags: .maskCommand)
     }
 
+    static func cmdShiftA() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Shift+A")
+        postKey(0, flags: [.maskCommand, .maskShift])
+    }
+
     static func cmdBracketLeft() {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+[")
         postKey(33, flags: .maskCommand)
@@ -115,6 +172,7 @@ class Actions {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+]")
         postKey(30, flags: .maskCommand)
     }
+
 
     static func cmdBacktick() {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+`")
@@ -134,6 +192,15 @@ class Actions {
     static func controlShiftTab() {
         logEvent("\(getActiveAppName() ?? "unknown"): Control+Shift+Tab")
         postKey(48, flags: [.maskControl, .maskShift])
+    }
+
+    static func controlAltShiftTab() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Ctrl+Alt+Shift+Tab (AppleScript)")
+        runAppleScript("""
+        tell application "System Events"
+            key code 48 using {control down, option down, shift down}
+        end tell
+        """)
     }
 
     // MARK: - iTerm2

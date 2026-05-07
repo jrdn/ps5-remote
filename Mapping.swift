@@ -24,14 +24,30 @@ enum ControllerInput: Hashable {
 var r2Active: Bool = false
 
 var defaultMapping: [ControllerInput: Action] = [
+    .button(.square): {
+        if Actions.isActiveApp("claude") { Actions.cmdDDown() }
+        else if Actions.isActiveApp("codex") { Actions.controlMDown() }
+        else if Actions.isActiveBrowser() { Actions.spaceDown() }
+    },
+    .buttonReleased(.square): {
+        if Actions.isActiveApp("claude") { Actions.cmdDUp() }
+        else if Actions.isActiveApp("codex") { Actions.controlMUp() }
+        else if Actions.isActiveBrowser() { Actions.spaceUp() }
+    },
+
     .button(.cross):    { Actions.sendEnter() },
     .button(.circle):   { Actions.sendEscape() },
     .button(.triangle): {
-        if Actions.isActiveBrowser() { Actions.closeTab() }
+        if Actions.isActiveApp("slack") { Actions.cmdShiftA() }
+        else if Actions.isActiveBrowser() { Actions.closeTab() }
     },
 
     .button(.l1): {
-        if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+        if Actions.isActiveApp("claude") || Actions.isActiveApp("codex") {
+            Actions.browserPrevTab()
+        } else if Actions.isActiveApp("slack") {
+            Actions.optArrowUp()
+        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
             Actions.cmdShiftBacktick()
         } else if Actions.isActiveBrowser() {
             Actions.browserPrevTab()
@@ -40,12 +56,16 @@ var defaultMapping: [ControllerInput: Action] = [
         }
     },
     .buttonReleased(.l1): {
-        if !Actions.isActiveBrowser() && !Actions.isActiveApp("ghostty") && !Actions.isActiveApp("iterm2") {
+        if !Actions.isActiveBrowser() && !Actions.isActiveApp("ghostty") && !Actions.isActiveApp("iterm2") && !Actions.isActiveApp("claude") && !Actions.isActiveApp("codex") && !Actions.isActiveApp("slack") {
             Actions.leftClickUp()
         }
     },
     .button(.r1): {
-        if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
+        if Actions.isActiveApp("claude") || Actions.isActiveApp("codex") {
+            Actions.browserNextTab()
+        } else if Actions.isActiveApp("slack") {
+            Actions.optArrowDown()
+        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
             Actions.cmdBacktick()
         } else if Actions.isActiveBrowser() {
             Actions.browserNextTab()
@@ -54,6 +74,8 @@ var defaultMapping: [ControllerInput: Action] = [
 
     .button(.l2):         { Actions.startDictationPress() },
     .buttonReleased(.l2): { Actions.startDictationRelease() },
+
+    .button(.l3):       { Actions.controlAltShiftTab() },
 
     .button(.share):    { Actions.switchSpaceLeft() },
     .button(.options):  { Actions.switchSpaceRight() },
