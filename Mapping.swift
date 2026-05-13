@@ -120,6 +120,7 @@ var defaultMapping: [ControllerInput: Action] = [
 
 var r2Mapping: [ControllerInput: Action] = [
     .button(.square):         { Actions.middleClick() },
+    .button(.cross):          { Actions.sendCommandEnter() },
     .button(.l1):             { Actions.leftClickDown() },
     .buttonReleased(.l1):     { Actions.leftClickUp() },
     .button(.r1):             { Actions.rightClick() },

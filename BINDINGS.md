@@ -29,6 +29,7 @@ Holding R2 activates an alternate layer for different actions:
 | Input | Action |
 |-------|--------|
 | Square | Middle Click |
+| X | Cmd+Return |
 | L1 | Left Click |
 | R1 | Right Click |
 | Left Stick | Mouse Movement |

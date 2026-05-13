@@ -50,6 +50,10 @@ class Actions {
 
     static func sendEscape() { postKey(53) }
     static func sendEnter()  { postKey(36) }
+    static func sendCommandEnter() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Return")
+        postKey(36, flags: .maskCommand)
+    }
 
     private static func dictationToggle() {
         runAppleScript("""

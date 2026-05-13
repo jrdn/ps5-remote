@@ -1,8 +1,14 @@
-.claude/settings.local.json
-
 # Build artifacts
 ps5-remote
 debug
 test
 *.o
 *.swiftmodule
+
+# Junk
+.claude/settings.local.json
+.ai.code.files/
+.projectile
+__pycache__/
+*.elc
+flycheck_*
