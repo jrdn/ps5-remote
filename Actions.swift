@@ -115,6 +115,51 @@ class Actions {
     static func arrowUp()    { postKey(126) }
     static func arrowDown()  { postKey(125) }
 
+    static func sendBackslash() {
+        logEvent("Lightroom: \\ (before/after)")
+        runAppleScript("""
+        tell application "System Events"
+            key code 42
+        end tell
+        """)
+    }
+
+    static func sendZ() {
+        logEvent("Lightroom: Z")
+        runAppleScript("""
+        tell application "System Events"
+            keystroke "z"
+        end tell
+        """)
+    }
+
+    static func sendX() {
+        logEvent("Lightroom: X")
+        runAppleScript("""
+        tell application "System Events"
+            keystroke "x"
+        end tell
+        """)
+    }
+
+    static func cmdPlus() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+= (zoom in)")
+        runAppleScript("""
+        tell application "System Events"
+            key code 24 using command down
+        end tell
+        """)
+    }
+
+    static func cmdMinus() {
+        logEvent("\(getActiveAppName() ?? "unknown"): Cmd+- (zoom out)")
+        runAppleScript("""
+        tell application "System Events"
+            key code 27 using command down
+        end tell
+        """)
+    }
+
     static func optArrowUp() {
         logEvent("\(getActiveAppName() ?? "unknown"): Opt+Up")
         postKey(126, flags: .maskAlternate)

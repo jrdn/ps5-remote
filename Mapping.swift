@@ -25,7 +25,8 @@ var r2Active: Bool = false
 
 var defaultMapping: [ControllerInput: Action] = [
     .button(.square): {
-        if Actions.isActiveApp("claude") { Actions.cmdDDown() }
+        if Actions.isActiveApp("lightroom") { Actions.sendX() }
+        else if Actions.isActiveApp("claude") { Actions.cmdDDown() }
         else if Actions.isActiveApp("codex") { Actions.controlMDown() }
         else if Actions.isActiveBrowser() { Actions.spaceDown() }
     },
@@ -35,15 +36,20 @@ var defaultMapping: [ControllerInput: Action] = [
         else if Actions.isActiveBrowser() { Actions.spaceUp() }
     },
 
-    .button(.cross):    { Actions.sendEnter() },
+    .button(.cross): {
+        if Actions.isActiveApp("lightroom") { Actions.sendBackslash() }
+        else { Actions.sendEnter() }
+    },
     .button(.circle):   { Actions.sendEscape() },
     .button(.triangle): {
-        if Actions.isActiveApp("slack") { Actions.cmdShiftA() }
+        if Actions.isActiveApp("lightroom") { Actions.sendZ() }
+        else if Actions.isActiveApp("slack") { Actions.cmdShiftA() }
         else if Actions.isActiveBrowser() { Actions.closeTab() }
     },
 
     .button(.l1): {
-        if Actions.isActiveApp("claude") || Actions.isActiveApp("codex") {
+        if Actions.isActiveApp("lightroom") { Actions.spaceDown() }
+        else if Actions.isActiveApp("claude") || Actions.isActiveApp("codex") {
             Actions.browserPrevTab()
         } else if Actions.isActiveApp("slack") {
             Actions.optArrowUp()
@@ -51,14 +57,10 @@ var defaultMapping: [ControllerInput: Action] = [
             Actions.cmdShiftBacktick()
         } else if Actions.isActiveBrowser() {
             Actions.browserPrevTab()
-        } else {
-            Actions.leftClickDown()
         }
     },
     .buttonReleased(.l1): {
-        if !Actions.isActiveBrowser() && !Actions.isActiveApp("ghostty") && !Actions.isActiveApp("iterm2") && !Actions.isActiveApp("claude") && !Actions.isActiveApp("codex") && !Actions.isActiveApp("slack") {
-            Actions.leftClickUp()
-        }
+        if Actions.isActiveApp("lightroom") { Actions.spaceUp() }
     },
     .button(.r1): {
         if Actions.isActiveApp("claude") || Actions.isActiveApp("codex") {
@@ -83,8 +85,8 @@ var defaultMapping: [ControllerInput: Action] = [
     .button(.ps):       { Actions.startDictationPressPS() },
     .button(.touchpad): { Actions.toggleMissionControl() },
 
-    .dpad(.up):    { Actions.arrowUp() },
-    .dpad(.down):  { Actions.arrowDown() },
+    .dpad(.up):    { Actions.isActiveApp("lightroom") ? Actions.cmdPlus() : Actions.arrowUp() },
+    .dpad(.down):  { Actions.isActiveApp("lightroom") ? Actions.cmdMinus() : Actions.arrowDown() },
     .dpad(.left):  { Actions.arrowLeft() },
     .dpad(.right): { Actions.arrowRight() },
 
