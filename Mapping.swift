@@ -118,6 +118,13 @@ var defaultMapping: [ControllerInput: Action] = [
             Actions.iterm2PaneRight()
         }
     },
+
+    .rightStick(.left): {
+        if Actions.isActiveApp("ghostty") { Actions.controlShiftTab() }
+    },
+    .rightStick(.right): {
+        if Actions.isActiveApp("ghostty") { Actions.controlTab() }
+    },
 ]
 
 var r2Mapping: [ControllerInput: Action] = [
