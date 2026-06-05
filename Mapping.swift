@@ -40,7 +40,7 @@ var defaultMapping: [ControllerInput: Action] = [
         if Actions.isActiveApp("lightroom") { Actions.sendBackslash() }
         else { Actions.sendEnter() }
     },
-    .button(.circle):   { Actions.sendEscape() },
+    .button(.circle):   { Actions.sendBackspace() },
     .button(.triangle): {
         if Actions.isActiveApp("lightroom") { Actions.sendZ() }
         else if Actions.isActiveApp("slack") { Actions.cmdShiftA() }
@@ -129,6 +129,7 @@ var defaultMapping: [ControllerInput: Action] = [
 
 var r2Mapping: [ControllerInput: Action] = [
     .button(.square):         { Actions.middleClick() },
+    .button(.circle):         { Actions.sendEscape() },
     .button(.cross):          { Actions.sendCommandEnter() },
     .button(.l1):             { Actions.leftClickDown() },
     .buttonReleased(.l1):     { Actions.leftClickUp() },

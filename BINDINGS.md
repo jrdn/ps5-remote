@@ -5,13 +5,13 @@
 | Input | Action |
 |-------|--------|
 | X | Enter / Backslash *(Lightroom)* |
-| Circle | Escape |
+| Circle | Backspace |
 | Square | Cmd+D hold *(Claude)* / Ctrl+M hold *(Codex)* / Space hold *(browsers)* / X key *(Lightroom)* |
 | Triangle | Close Tab Cmd+W *(browsers)* / Cmd+Shift+A *(Slack)* / Z key *(Lightroom)* |
 | L1 | Prev Tab *(browsers, Claude, Codex)* / Window Cycle Back *(Ghostty/iTerm2)* / Opt+Up *(Slack)* / Space hold *(Lightroom)* |
 | R1 | Next Tab *(browsers, Claude, Codex)* / Window Cycle Forward *(Ghostty/iTerm2)* / Opt+Down *(Slack)* |
 | L2 | Toggle Dictation (press = on, release = off) |
-| L3 (left stick click) | Ctrl+Alt+Shift+Tab |
+| L3 (left stick click) | Raycast app switcher (Ctrl+Alt+Shift+Tab) |
 | Share | Switch Space Left (Ctrl+Left) |
 | Options | Switch Space Right (Ctrl+Right) |
 | PS | Toggle Dictation |
@@ -35,6 +35,7 @@ Holding R2 activates an alternate layer for different actions:
 | Input | Action |
 |-------|--------|
 | Square | Middle Click |
+| Circle | Escape |
 | X | Cmd+Return |
 | L1 (hold) | Left Click Hold |
 | L1 (release) | Left Click Release |
@@ -56,8 +57,8 @@ When R2 is held:
 - Continuous movement while held
 
 ### Scrolling (R2 + Right Stick)
-- Sensitivity: 0.03x of stick deflection
-- Throttled to 15Hz (every 4th frame) for slower, smoother scrolling
+- Sensitivity: 1.0px of stick deflection
+- Throttled to 30Hz (every 2nd frame)
 - Active when stick is outside the 20-point deadzone
 
 ### Stick Deadzone
@@ -97,4 +98,4 @@ When R2 is held:
 
 ## Unused Inputs
 - Right Stick Up/Down (no binding)
-- Most buttons in R2 mode (only Square, X, L1, R1, L2, and both sticks are mapped)
+- Most buttons in R2 mode (only Square, Circle, X, L1, R1, L2, and both sticks are mapped)

@@ -48,8 +48,9 @@ class Actions {
 
     // MARK: - Key Events
 
-    static func sendEscape() { postKey(53) }
-    static func sendEnter()  { postKey(36) }
+    static func sendEscape()     { postKey(53) }
+    static func sendEnter()      { postKey(36) }
+    static func sendBackspace()  { postKey(51) }
     static func sendCommandEnter() {
         logEvent("\(getActiveAppName() ?? "unknown"): Cmd+Return")
         postKey(36, flags: .maskCommand)
@@ -433,7 +434,7 @@ class Actions {
     // MARK: - Stick-to-Mouse/Scroll
 
     private static let MOUSE_SENSITIVITY: Double = 0.2
-    private static let SCROLL_SENSITIVITY: Double = 0.03
+    private static let SCROLL_SENSITIVITY: Double = 1.0
     private static var scrollEventCounter = 0
 
     static func moveMouseByStick(x: Int, y: Int) {
@@ -451,16 +452,16 @@ class Actions {
     }
 
     static func scrollByStick(x: Int, y: Int) {
-        // Throttle to 15Hz (every 4th frame) for slower, smoother scrolling
+        // Throttle to 30Hz (every 2nd frame)
         scrollEventCounter += 1
-        guard scrollEventCounter % 4 == 0 else { return }
+        guard scrollEventCounter % 2 == 0 else { return }
 
         let scrollY = -Int32(Double(y - 128) * SCROLL_SENSITIVITY)
         let scrollX = -Int32(Double(x - 128) * SCROLL_SENSITIVITY)
         if abs(scrollY) < 1 && abs(scrollX) < 1 { return }
 
         guard let scrollEvent = CGEvent(scrollWheelEvent2Source: nil,
-                                       units: .line,
+                                       units: .pixel,
                                        wheelCount: 2,
                                        wheel1: scrollY,
                                        wheel2: scrollX,
