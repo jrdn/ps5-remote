@@ -1,0 +1,17 @@
+[tasks.build]
+description = "Compile ps5-remote"
+run = """
+swiftc Actions.swift Controller.swift Mapping.swift main.swift \
+  -framework IOKit -framework AppKit -framework CoreGraphics \
+  -o ps5-remote
+"""
+
+[tasks.run]
+description = "Build and run ps5-remote"
+depends = ["build"]
+run = "./ps5-remote"
+
+[tasks.debug]
+description = "Build and run with HID event logging"
+depends = ["build"]
+run = "./ps5-remote --debug"
