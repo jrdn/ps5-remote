@@ -433,13 +433,18 @@ class Actions {
 
     // MARK: - Stick-to-Mouse/Scroll
 
-    private static let MOUSE_SENSITIVITY: Double = 0.2
+    private static let MOUSE_SENSITIVITY: Double = 0.5
     private static let SCROLL_SENSITIVITY: Double = 1.0
     private static var scrollEventCounter = 0
 
+    private static func stickCurve(_ raw: Int) -> Double {
+        let norm = Double(raw - 128) / 128.0
+        return norm * abs(norm) * 128.0 * MOUSE_SENSITIVITY
+    }
+
     static func moveMouseByStick(x: Int, y: Int) {
-        let deltaX = Double(x - 128) * MOUSE_SENSITIVITY
-        let deltaY = Double(y - 128) * MOUSE_SENSITIVITY
+        let deltaX = stickCurve(x)
+        let deltaY = stickCurve(y)
         if abs(deltaX) < 0.5 && abs(deltaY) < 0.5 { return }
 
         guard let currentEvent = CGEvent(source: nil) else { return }
