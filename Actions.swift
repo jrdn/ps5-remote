@@ -434,8 +434,10 @@ class Actions {
     // MARK: - Stick-to-Mouse/Scroll
 
     private static let MOUSE_SENSITIVITY: Double = 0.5
-    private static let SCROLL_SENSITIVITY: Double = 1.0
-    private static var scrollEventCounter = 0
+    // Max lines per event at full stick deflection (runs at 60Hz, cubic curve)
+    private static let SCROLL_MAX_LINES: Double = 5.0
+    private static var scrollAccumX: Double = 0
+    private static var scrollAccumY: Double = 0
 
     private static func stickCurve(_ raw: Int) -> Double {
         let norm = Double(raw - 128) / 128.0
@@ -457,13 +459,19 @@ class Actions {
     }
 
     static func scrollByStick(x: Int, y: Int) {
-        // Throttle to 30Hz (every 2nd frame)
-        scrollEventCounter += 1
-        guard scrollEventCounter % 2 == 0 else { return }
+        let normY = Double(y - 128) / 127.0
+        let normX = Double(x - 128) / 127.0
 
-        let scrollY = -Int32(Double(y - 128) * SCROLL_SENSITIVITY)
-        let scrollX = -Int32(Double(x - 128) * SCROLL_SENSITIVITY)
-        if abs(scrollY) < 1 && abs(scrollX) < 1 { return }
+        // Cubic acceleration: small deflections are very gentle, large deflections are fast
+        scrollAccumY += -(normY * normY * normY) * SCROLL_MAX_LINES
+        scrollAccumX += -(normX * normX * normX) * SCROLL_MAX_LINES
+
+        let scrollY = Int32(scrollAccumY)
+        let scrollX = Int32(scrollAccumX)
+        scrollAccumY -= Double(scrollY)
+        scrollAccumX -= Double(scrollX)
+
+        if scrollY == 0 && scrollX == 0 { return }
 
         guard let scrollEvent = CGEvent(scrollWheelEvent2Source: nil,
                                        units: .pixel,
