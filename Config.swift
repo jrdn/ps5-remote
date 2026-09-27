@@ -20,7 +20,16 @@ struct Rule {
     let release: Action?
 }
 
-typealias Layer = [ControllerInput: [Rule]]
+enum StickMode: String {
+    case directions, mouse, scroll
+}
+
+struct Layer {
+    var hold: Button? = nil  // button held to activate this layer; nil for the default layer
+    var leftStick: StickMode = .directions
+    var rightStick: StickMode = .directions
+    var rules: [ControllerInput: [Rule]] = [:]
+}
 
 struct Bindings {
     var layers: [String: Layer]
@@ -29,7 +38,7 @@ struct Bindings {
 private let inputNames: [String: ControllerInput] = [
     "square": .button(.square), "cross": .button(.cross),
     "circle": .button(.circle), "triangle": .button(.triangle),
-    "l1": .button(.l1), "r1": .button(.r1), "l2": .button(.l2),
+    "l1": .button(.l1), "r1": .button(.r1), "l2": .button(.l2), "r2": .button(.r2),
     "l3": .button(.l3), "r3": .button(.r3),
     "share": .button(.share), "options": .button(.options),
     "ps": .button(.ps), "touchpad": .button(.touchpad),
@@ -40,8 +49,6 @@ private let inputNames: [String: ControllerInput] = [
     "right_stick_up": .rightStick(.up), "right_stick_down": .rightStick(.down),
     "right_stick_left": .rightStick(.left), "right_stick_right": .rightStick(.right),
 ]
-
-private let layerNames: Set<String> = ["default", "r2"]
 
 private let modifierNames: [String: CGEventFlags] = [
     "cmd": .maskCommand, "command": .maskCommand,
@@ -91,24 +98,67 @@ func loadBindings(path: String) throws -> Bindings {
 
     var bindings = Bindings(layers: [:])
     for (layerName, layerNode) in layersNode {
-        guard layerNames.contains(layerName) else {
-            throw ConfigError("layers.\(layerName): unknown layer (expected one of \(layerNames.sorted()))")
+        bindings.layers[layerName] = try parseLayer(layerNode, appGroups: appGroups, context: "layers.\(layerName)")
+    }
+
+    guard let defaultLayer = bindings.layers["default"] else { throw ConfigError("layers.default: missing") }
+    guard defaultLayer.hold == nil else { throw ConfigError("layers.default: cannot have hold:") }
+
+    var holdButtons: [Button: String] = [:]
+    for (name, layer) in bindings.layers where name != "default" {
+        guard let hold = layer.hold else { throw ConfigError("layers.\(name): missing hold:") }
+        if let other = holdButtons[hold] {
+            throw ConfigError("layers.\(name): hold button is already used by layer '\(other)'")
         }
-        guard let layerMap = layerNode as? [String: Any] else {
-            throw ConfigError("layers.\(layerName): must be a mapping")
-        }
-        var layer: Layer = [:]
-        for (inputName, bindingNode) in layerMap {
-            let ctx = "layers.\(layerName).\(inputName)"
-            guard let input = inputNames[inputName] else { throw ConfigError("\(ctx): unknown input") }
-            let ruleNodes = bindingNode as? [Any] ?? [bindingNode]
-            layer[input] = try ruleNodes.enumerated().map { i, node in
-                try parseRule(node, appGroups: appGroups, context: ruleNodes.count > 1 ? "\(ctx)[\(i)]" : ctx)
+        holdButtons[hold] = name
+    }
+    // A hold button switches layers instead of dispatching, so a binding on it would never fire
+    for (name, layer) in bindings.layers {
+        for case .button(let button) in layer.rules.keys {
+            if let owner = holdButtons[button] {
+                throw ConfigError("layers.\(name).bindings: button is the hold button for layer '\(owner)' and can't be bound")
             }
         }
-        bindings.layers[layerName] = layer
     }
     return bindings
+}
+
+private func parseLayer(_ node: Any, appGroups: [String: [String]], context ctx: String) throws -> Layer {
+    guard let map = node as? [String: Any] else { throw ConfigError("\(ctx): must be a mapping") }
+    for key in map.keys where !["hold", "left_stick", "right_stick", "bindings"].contains(key) {
+        throw ConfigError("\(ctx).\(key): unknown layer setting (expected hold, left_stick, right_stick, bindings)")
+    }
+
+    var layer = Layer()
+    if let holdNode = map["hold"] {
+        guard let name = holdNode as? String, case .button(let button)? = inputNames[name] else {
+            throw ConfigError("\(ctx).hold: must be a button name")
+        }
+        layer.hold = button
+    }
+    layer.leftStick = try stickMode(map["left_stick"], context: "\(ctx).left_stick")
+    layer.rightStick = try stickMode(map["right_stick"], context: "\(ctx).right_stick")
+
+    guard let bindingsMap = (map["bindings"] ?? [String: Any]()) as? [String: Any] else {
+        throw ConfigError("\(ctx).bindings: must be a mapping")
+    }
+    for (inputName, bindingNode) in bindingsMap {
+        let inputCtx = "\(ctx).bindings.\(inputName)"
+        guard let input = inputNames[inputName] else { throw ConfigError("\(inputCtx): unknown input") }
+        let ruleNodes = bindingNode as? [Any] ?? [bindingNode]
+        layer.rules[input] = try ruleNodes.enumerated().map { i, node in
+            try parseRule(node, appGroups: appGroups, context: ruleNodes.count > 1 ? "\(inputCtx)[\(i)]" : inputCtx)
+        }
+    }
+    return layer
+}
+
+private func stickMode(_ node: Any?, context ctx: String) throws -> StickMode {
+    guard let node else { return .directions }
+    guard let name = node as? String, let mode = StickMode(rawValue: name) else {
+        throw ConfigError("\(ctx): must be directions, mouse, or scroll")
+    }
+    return mode
 }
 
 private func parseRule(_ node: Any, appGroups: [String: [String]], context ctx: String) throws -> Rule {

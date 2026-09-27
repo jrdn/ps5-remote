@@ -13,9 +13,16 @@
 #   release:    an action (key/click/builtin) to run when the button is released
 #
 # Modifiers: cmd, shift, opt/alt, ctrl.
-# Inputs: square cross circle triangle l1 r1 l2 l3 r3 share options ps touchpad
+# Inputs: square cross circle triangle l1 r1 l2 r2 l3 r3 share options ps touchpad
 #         dpad_{up,down,left,right} left_stick_{...} right_stick_{...}
-# Layers: default, r2 (while R2 is held; sticks also drive mouse/scroll in this layer)
+#
+# Layers: `default` is active unless a layer's hold button is down. Every other layer needs
+# `hold: <button>`; if several are held, the most recently pressed wins. An input not bound in the
+# active layer does nothing. A hold button can't be bound in any layer.
+#   hold:        button that activates the layer while held
+#   left_stick:  directions (fires left_stick_* bindings, default) | mouse | scroll
+#   right_stick: same as left_stick
+#   bindings:    input → binding
 
 apps:
   browser: [firefox, chrome, safari]
@@ -23,77 +30,82 @@ apps:
 
 layers:
   default:
-    square:
-      - { app: lightroom, key: x, via: applescript }
-      - { app: claude, hold: cmd+d }
-      - { app: codex, hold: ctrl+m }
-      - { app: browser, hold: space }
-    cross:
-      - { app: lightroom, key: "\\", via: applescript }
-      - { key: return }
-    circle: { key: backspace }
-    triangle:
-      - { app: lightroom, key: z, via: applescript }
-      - { app: slack, key: cmd+shift+a }
-      - { app: browser, key: cmd+w }
+    bindings:
+      square:
+        - { app: lightroom, key: x, via: applescript }
+        - { app: claude, hold: cmd+d }
+        - { app: codex, hold: ctrl+m }
+        - { app: browser, hold: space }
+      cross:
+        - { app: lightroom, key: "\\", via: applescript }
+        - { key: return }
+      circle: { key: backspace }
+      triangle:
+        - { app: lightroom, key: z, via: applescript }
+        - { app: slack, key: cmd+shift+a }
+        - { app: browser, key: cmd+w }
 
-    l1:
-      - { app: lightroom, hold: space }
-      - { app: [claude, codex], key: "cmd+shift+[" }
-      - { app: slack, key: opt+up }
-      - { app: terminal, key: "cmd+shift+`" }
-      - { app: browser, key: "cmd+shift+[" }
-    r1:
-      - { app: [claude, codex], key: "cmd+shift+]" }
-      - { app: slack, key: opt+down }
-      - { app: terminal, key: "cmd+`" }
-      - { app: browser, key: "cmd+shift+]" }
+      l1:
+        - { app: lightroom, hold: space }
+        - { app: [claude, codex], key: "cmd+shift+[" }
+        - { app: slack, key: opt+up }
+        - { app: terminal, key: "cmd+shift+`" }
+        - { app: browser, key: "cmd+shift+[" }
+      r1:
+        - { app: [claude, codex], key: "cmd+shift+]" }
+        - { app: slack, key: opt+down }
+        - { app: terminal, key: "cmd+`" }
+        - { app: browser, key: "cmd+shift+]" }
 
-    # Dictation toggles on press and again on release (push-to-talk)
-    l2:
-      key: ctrl+opt+cmd+f10
-      via: applescript
-      release: { key: ctrl+opt+cmd+f10, via: applescript }
-    l3: { key: ctrl+opt+shift+tab, via: applescript }
-    r3: { builtin: voice_control }
+      # Dictation toggles on press and again on release (push-to-talk)
+      l2:
+        key: ctrl+opt+cmd+f10
+        via: applescript
+        release: { key: ctrl+opt+cmd+f10, via: applescript }
+      l3: { key: ctrl+opt+shift+tab, via: applescript }
+      r3: { builtin: voice_control }
 
-    share:    { key: ctrl+left, via: applescript }
-    options:  { key: ctrl+right, via: applescript }
-    ps:       { key: cmd+shift+opt+f10, via: applescript }
-    touchpad: { builtin: mission_control }
+      share:    { key: ctrl+left, via: applescript }
+      options:  { key: ctrl+right, via: applescript }
+      ps:       { key: cmd+shift+opt+f10, via: applescript }
+      touchpad: { builtin: mission_control }
 
-    dpad_up:
-      - { app: lightroom, key: "cmd+=", via: applescript }
-      - { key: up }
-    dpad_down:
-      - { app: lightroom, key: "cmd+-", via: applescript }
-      - { key: down }
-    dpad_left:  { key: left }
-    dpad_right: { key: right }
+      dpad_up:
+        - { app: lightroom, key: "cmd+=", via: applescript }
+        - { key: up }
+      dpad_down:
+        - { app: lightroom, key: "cmd+-", via: applescript }
+        - { key: down }
+      dpad_left:  { key: left }
+      dpad_right: { key: right }
 
-    left_stick_up:
-      - { app: emacs, key: shift+up }
-      - { app: terminal, key: cmd+opt+up }
-    left_stick_down:
-      - { app: emacs, key: shift+down }
-      - { app: terminal, key: cmd+opt+down }
-    left_stick_left:
-      - { app: emacs, key: shift+left }
-      - { app: terminal, key: cmd+opt+left }
-    left_stick_right:
-      - { app: emacs, key: shift+right }
-      - { app: terminal, key: cmd+opt+right }
+      left_stick_up:
+        - { app: emacs, key: shift+up }
+        - { app: terminal, key: cmd+opt+up }
+      left_stick_down:
+        - { app: emacs, key: shift+down }
+        - { app: terminal, key: cmd+opt+down }
+      left_stick_left:
+        - { app: emacs, key: shift+left }
+        - { app: terminal, key: cmd+opt+left }
+      left_stick_right:
+        - { app: emacs, key: shift+right }
+        - { app: terminal, key: cmd+opt+right }
 
-    right_stick_left:  { app: ghostty, key: ctrl+shift+tab }
-    right_stick_right: { app: ghostty, key: ctrl+tab }
+      right_stick_left:  { app: ghostty, key: ctrl+shift+tab }
+      right_stick_right: { app: ghostty, key: ctrl+tab }
 
-  r2:
-    square: { click: middle }
-    circle: { key: escape }
-    cross:  { key: cmd+return }
-    l1:     { click_hold: left }
-    r1:     { click: right }
-    l2:
-      key: ctrl+opt+cmd+f10
-      via: applescript
-      release: { key: ctrl+opt+cmd+f10, via: applescript }
+  mouse:
+    hold: r2
+    left_stick: mouse
+    right_stick: scroll
+    bindings:
+      square: { click: middle }
+      circle: { key: escape }
+      cross:  { key: cmd+return }
+      l1:     { click_hold: left }
+      r1:     { click: right }
+      l2:
+        key: ctrl+opt+cmd+f10
+        via: applescript
+        release: { key: ctrl+opt+cmd+f10, via: applescript }

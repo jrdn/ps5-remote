@@ -81,20 +81,23 @@ class PS5Controller {
     // Runs on timer thread — all shared state accessed under stickLock
     private func updateMouseAndScroll() {
         stickLock.lock()
-        let isR2 = r2Active
         let leftX = leftStickX
         let leftY = leftStickY
         let rightX = rightStickX
         let rightY = rightStickY
         stickLock.unlock()
 
-        guard isR2 else { return }
+        let modes = currentStickModes()
+        applyStickMode(modes.left, x: leftX, y: leftY)
+        applyStickMode(modes.right, x: rightX, y: rightY)
+    }
 
-        if !isStickInDeadzone(leftX) || !isStickInDeadzone(leftY) {
-            Actions.moveMouseByStick(x: leftX, y: leftY)
-        }
-        if !isStickInDeadzone(rightX) || !isStickInDeadzone(rightY) {
-            Actions.scrollByStick(x: rightX, y: rightY)
+    private func applyStickMode(_ mode: StickMode, x: Int, y: Int) {
+        guard !isStickInDeadzone(x) || !isStickInDeadzone(y) else { return }
+        switch mode {
+        case .mouse:      Actions.moveMouseByStick(x: x, y: y)
+        case .scroll:     Actions.scrollByStick(x: x, y: y)
+        case .directions: break
         }
     }
 
@@ -159,7 +162,6 @@ class PS5Controller {
 
         // No more input will arrive, so clear held state or the mouse keeps drifting and held keys stay down
         stickLock.lock()
-        r2Active = false
         leftStickX = 128; leftStickY = 128
         rightStickX = 128; rightStickY = 128
         stickLock.unlock()
@@ -169,7 +171,7 @@ class PS5Controller {
         onConnectionChange?(false)
     }
 
-    // Runs on main RunLoop thread — r2Active and stick values written here, read on timer thread via stickLock
+    // Runs on main RunLoop thread — stick values written here, read on timer thread via stickLock
     private func handleInput(_ value: IOHIDValue) {
         let element = IOHIDValueGetElement(value)
         let intValue = IOHIDValueGetIntegerValue(value)
@@ -187,13 +189,6 @@ class PS5Controller {
 
         if usagePage == BUTTON_USAGE_PAGE {
             guard let button = buttonMap[usage] else { return }
-            if button == .r2 {
-                // Lock to synchronize with timer thread reads of r2Active
-                stickLock.lock()
-                r2Active = intValue == 1
-                stickLock.unlock()
-                return
-            }
             dispatch(input: intValue == 1 ? .button(button) : .buttonReleased(button))
             return
         }
@@ -213,7 +208,7 @@ class PS5Controller {
                 if usage == 0x30 { leftStickX = stickValue } else { leftStickY = stickValue }
                 stickLock.unlock()
 
-                if !r2Active {
+                if currentStickModes().left == .directions {
                     let x = usage == 0x30 ? stickValue : leftStickX
                     let y = usage == 0x31 ? stickValue : leftStickY
                     let dir = stickDirection(x: x, y: y)
@@ -232,7 +227,7 @@ class PS5Controller {
                 if usage == 0x32 { rightStickX = stickValue } else { rightStickY = stickValue }
                 stickLock.unlock()
 
-                if !r2Active {
+                if currentStickModes().right == .directions {
                     let x = usage == 0x32 ? stickValue : rightStickX
                     let y = usage == 0x35 ? stickValue : rightStickY
                     let dir = stickDirection(x: x, y: y)
