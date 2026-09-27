@@ -60,6 +60,8 @@ class PS5Controller {
 
     private var updateTimer: DispatchSourceTimer?
 
+    var onConnectionChange: ((Bool) -> Void)?
+
     init() {
         setupHIDManager()
         startUpdateLoop()
@@ -133,13 +135,14 @@ class PS5Controller {
             Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue().deviceDisconnected(inDevice)
         }, selfPtr)
 
-        IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+        IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.commonModes.rawValue)
         IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
     }
 
     private func deviceConnected(_ device: IOHIDDevice) {
         print("✓ PS5 Controller connected")
         self.deviceRef = device
+        onConnectionChange?(true)
 
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
         IOHIDDeviceRegisterInputValueCallback(device, { inContext, inResult, inSender, inValue in
@@ -147,12 +150,23 @@ class PS5Controller {
             Unmanaged<PS5Controller>.fromOpaque(context).takeUnretainedValue().handleInput(inValue)
         }, selfPtr)
 
-        IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+        IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), CFRunLoopMode.commonModes.rawValue)
     }
 
     private func deviceDisconnected(_ device: IOHIDDevice) {
         print("✗ PS5 Controller disconnected")
         self.deviceRef = nil
+
+        // No more input will arrive, so clear held state or the mouse keeps drifting and held keys stay down
+        stickLock.lock()
+        r2Active = false
+        leftStickX = 128; leftStickY = 128
+        rightStickX = 128; rightStickY = 128
+        stickLock.unlock()
+        lastLeftStickDir = nil
+        lastRightStickDir = nil
+        releaseAllHeld()
+        onConnectionChange?(false)
     }
 
     // Runs on main RunLoop thread — r2Active and stick values written here, read on timer thread via stickLock
@@ -236,6 +250,5 @@ class PS5Controller {
         print("Starting PS5 controller listener...", to: &standardError)
         print("Waiting for PS5 controller to connect...", to: &standardError)
         print("(Vendor ID: 0x\(String(PS5_VENDOR_ID, radix: 16).uppercased()))\n", to: &standardError)
-        CFRunLoopRun()
     }
 }

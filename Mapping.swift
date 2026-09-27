@@ -23,122 +23,32 @@ enum ControllerInput: Hashable {
 // Written on main RunLoop thread (HID callback), read on timer thread — protected by Controller's stickLock
 var r2Active: Bool = false
 
-var defaultMapping: [ControllerInput: Action] = [
-    .button(.square): {
-        if Actions.isActiveApp("lightroom") { Actions.sendX() }
-        else if Actions.isActiveApp("claude") { Actions.cmdDDown() }
-        else if Actions.isActiveApp("codex") { Actions.controlMDown() }
-        else if Actions.isActiveBrowser() { Actions.spaceDown() }
-    },
-    .buttonReleased(.square): {
-        if Actions.isActiveApp("claude") { Actions.cmdDUp() }
-        else if Actions.isActiveApp("codex") { Actions.controlMUp() }
-        else if Actions.isActiveBrowser() { Actions.spaceUp() }
-    },
+var bindings = Bindings(layers: [:])
 
-    .button(.cross): {
-        if Actions.isActiveApp("lightroom") { Actions.sendBackslash() }
-        else { Actions.sendEnter() }
-    },
-    .button(.circle):   { Actions.sendBackspace() },
-    .button(.triangle): {
-        if Actions.isActiveApp("lightroom") { Actions.sendZ() }
-        else if Actions.isActiveApp("slack") { Actions.cmdShiftA() }
-        else if Actions.isActiveBrowser() { Actions.closeTab() }
-    },
-
-    .button(.l1): {
-        if Actions.isActiveApp("lightroom") { Actions.spaceDown() }
-        else if Actions.isActiveApp("claude") || Actions.isActiveApp("codex") {
-            Actions.browserPrevTab()
-        } else if Actions.isActiveApp("slack") {
-            Actions.optArrowUp()
-        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
-            Actions.cmdShiftBacktick()
-        } else if Actions.isActiveBrowser() {
-            Actions.browserPrevTab()
-        }
-    },
-    .buttonReleased(.l1): {
-        if Actions.isActiveApp("lightroom") { Actions.spaceUp() }
-    },
-    .button(.r1): {
-        if Actions.isActiveApp("claude") || Actions.isActiveApp("codex") {
-            Actions.browserNextTab()
-        } else if Actions.isActiveApp("slack") {
-            Actions.optArrowDown()
-        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
-            Actions.cmdBacktick()
-        } else if Actions.isActiveBrowser() {
-            Actions.browserNextTab()
-        }
-    },
-
-    .button(.l2):         { Actions.startDictationPress() },
-    .buttonReleased(.l2): { Actions.startDictationRelease() },
-
-    .button(.l3):       { Actions.controlAltShiftTab() },
-
-    .button(.share):    { Actions.switchSpaceLeft() },
-    .button(.options):  { Actions.switchSpaceRight() },
-    .button(.r3):       { Actions.toggleVoiceControl() },
-    .button(.ps):       { Actions.startDictationPressPS() },
-    .button(.touchpad): { Actions.toggleMissionControl() },
-
-    .dpad(.up):    { Actions.isActiveApp("lightroom") ? Actions.cmdPlus() : Actions.arrowUp() },
-    .dpad(.down):  { Actions.isActiveApp("lightroom") ? Actions.cmdMinus() : Actions.arrowDown() },
-    .dpad(.left):  { Actions.arrowLeft() },
-    .dpad(.right): { Actions.arrowRight() },
-
-    .leftStick(.up): {
-        if Actions.isActiveApp("Emacs") {
-            Actions.shiftArrowUp()
-        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
-            Actions.iterm2PaneUp()
-        }
-    },
-    .leftStick(.down): {
-        if Actions.isActiveApp("Emacs") {
-            Actions.shiftArrowDown()
-        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
-            Actions.iterm2PaneDown()
-        }
-    },
-    .leftStick(.left): {
-        if Actions.isActiveApp("Emacs") {
-            Actions.shiftArrowLeft()
-        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
-            Actions.iterm2PaneLeft()
-        }
-    },
-    .leftStick(.right): {
-        if Actions.isActiveApp("Emacs") {
-            Actions.shiftArrowRight()
-        } else if Actions.isActiveApp("ghostty") || Actions.isActiveApp("iterm2") {
-            Actions.iterm2PaneRight()
-        }
-    },
-
-    .rightStick(.left): {
-        if Actions.isActiveApp("ghostty") { Actions.controlShiftTab() }
-    },
-    .rightStick(.right): {
-        if Actions.isActiveApp("ghostty") { Actions.controlTab() }
-    },
-]
-
-var r2Mapping: [ControllerInput: Action] = [
-    .button(.square):         { Actions.middleClick() },
-    .button(.circle):         { Actions.sendEscape() },
-    .button(.cross):          { Actions.sendCommandEnter() },
-    .button(.l1):             { Actions.leftClickDown() },
-    .buttonReleased(.l1):     { Actions.leftClickUp() },
-    .button(.r1):             { Actions.rightClick() },
-    .button(.l2):             { Actions.startDictationPress() },
-    .buttonReleased(.l2):     { Actions.startDictationRelease() },
-]
+// Release actions for buttons currently held, captured at press time so the release
+// fires even if the frontmost app or the R2 layer changed while held
+private var pendingReleases: [Button: Action] = [:]
 
 func dispatch(input: ControllerInput) {
-    let mapping = r2Active ? r2Mapping : defaultMapping
-    mapping[input]?()
+    if case .buttonReleased(let button) = input {
+        pendingReleases.removeValue(forKey: button)?()
+        return
+    }
+
+    let layer = bindings.layers[r2Active ? "r2" : "default"] ?? [:]
+    guard let rules = layer[input],
+          let rule = rules.first(where: { $0.apps?.contains(where: Actions.isActiveApp) ?? true })
+    else { return }
+
+    Actions.logEvent("\(Actions.getActiveAppName() ?? "unknown"): \(input) → \(rule.description)")
+    rule.press()
+    if case .button(let button) = input, let release = rule.release {
+        pendingReleases[button] = release
+    }
+}
+
+func releaseAllHeld() {
+    let releases = pendingReleases.values
+    pendingReleases.removeAll()
+    releases.forEach { $0() }
 }

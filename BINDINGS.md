@@ -1,5 +1,7 @@
 # PS5 Controller Bindings
 
+Bindings are defined in YAML (see the header comment in [`bindings.yaml`](bindings.yaml) for the format). The app reads `~/.config/ps5-remote/bindings.yaml`, seeded from the repo copy on first launch; edit it via the menu bar's **Open Config** and apply with **Reload Config**. `mise run run` uses the repo copy directly (`--config <path>`). The R2 modifier and R2 stick mouse/scroll are still built in.
+
 ## Normal Mode
 
 | Input | Action |

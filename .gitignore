@@ -1,5 +1,6 @@
 # Build artifacts
 ps5-remote
+.build/
 debug
 test
 *.o

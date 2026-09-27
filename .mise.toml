@@ -2,18 +2,75 @@
 
 [tasks.build]
 description = "Build the PS5 controller utility"
-run = "swiftc -o ps5-remote main.swift Controller.swift Actions.swift Mapping.swift -framework IOKit -framework CoreGraphics -framework AppKit"
-sources = ["*.swift"]
+run = "swift build -c release && cp .build/release/ps5-remote ."
+sources = ["*.swift", "Package.swift"]
 outputs = ["ps5-remote"]
 
 [tasks.run]
 description = "Run the PS5 controller utility"
-run = "./ps5-remote"
+run = "./ps5-remote --config bindings.yaml"
 depends = ["build"]
+
+[tasks.signing-identity]
+description = "Create a self-signed code signing identity in the login keychain if missing"
+run = """
+NAME="PS5 Remote Local Signing"
+security find-identity -p codesigning | grep -q "$NAME" && exit 0
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+# System LibreSSL: its PKCS#12 output is importable by `security` without extra flags
+/usr/bin/openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$NAME" \
+  -addext "keyUsage=critical,digitalSignature" \
+  -addext "extendedKeyUsage=critical,codeSigning" \
+  -keyout "$TMP/key.pem" -out "$TMP/cert.pem"
+/usr/bin/openssl pkcs12 -export -inkey "$TMP/key.pem" -in "$TMP/cert.pem" \
+  -out "$TMP/identity.p12" -passout pass:ps5
+security import "$TMP/identity.p12" -P ps5 -T /usr/bin/codesign
+echo "Created signing identity '$NAME'"
+"""
+
+[tasks.bundle]
+description = "Build PS5 Remote.app into .build/"
+depends = ["build", "signing-identity"]
+run = """
+APP=".build/PS5 Remote.app"
+rm -rf "$APP"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+cp ps5-remote "$APP/Contents/MacOS/"
+cp Info.plist "$APP/Contents/"
+cp bindings.yaml "$APP/Contents/Resources/"
+ICONSET=$(mktemp -d)/AppIcon.iconset
+mkdir "$ICONSET"
+for s in 16 32 128 256 512; do
+  sips -z $s $s AppIcon.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+  sips -z $((s*2)) $((s*2)) AppIcon.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+codesign --force --sign "PS5 Remote Local Signing" "$APP"
+"""
+
+[tasks.install]
+description = "Install PS5 Remote.app to ~/Applications (or /Applications with --system) and launch it"
+depends = ["bundle"]
+usage = 'flag "--system" help="Install to /Applications instead of ~/Applications"'
+run = """
+if [ "${usage_system:-false}" = "true" ]; then
+  DEST=/Applications OTHER=~/Applications
+else
+  DEST=~/Applications OTHER=/Applications
+fi
+pkill -x ps5-remote || true
+# Only keep one copy so permissions and the login item point at the right app
+rm -rf "$OTHER/PS5 Remote.app" "$DEST/PS5 Remote.app"
+mkdir -p "$DEST"
+cp -R ".build/PS5 Remote.app" "$DEST/"
+open "$DEST/PS5 Remote.app"
+echo "Installed to $DEST/PS5 Remote.app"
+"""
 
 [tasks.clean]
 description = "Remove built artifacts"
-run = "rm -f ps5-remote *.o *.swiftmodule"
+run = "rm -rf ps5-remote .build *.o *.swiftmodule"
 
 [tasks.rebuild]
 description = "Clean and build"
