@@ -48,19 +48,18 @@ Holding R2 activates an alternate layer for different actions:
 
 When R2 is held:
 - **Left Stick** moves the mouse continuously
-- **Right Stick** scrolls (15Hz throttle for smooth scrolling)
+- **Right Stick** scrolls (cubic curve, updated at 60Hz)
 - Other buttons have no action (empty)
 
 ## Movement Details
 
 ### Mouse Movement (R2 + Left Stick)
-- Sensitivity: 0.2x of stick deflection
+- Quadratic curve scaled by 0.5 (up to 64px per 60Hz update at full deflection)
 - Active when stick is outside the 20-point deadzone
 - Continuous movement while held
 
 ### Scrolling (R2 + Right Stick)
-- Sensitivity: 1.0px of stick deflection
-- Throttled to 30Hz (every 2nd frame)
+- Cubic curve, up to 5px per 60Hz update at full deflection; fractional remainders are accumulated, no frame throttle
 - Active when stick is outside the 20-point deadzone
 
 ### Stick Deadzone
