@@ -27,5 +27,5 @@ The menu bar icon shows ⚠️ if a permission is missing (click the warning in 
 
 ## Status
 
-Currently figuring out how to read events off the PS5 controller and log them.
+A working menu bar app: bindings, layers and per-app groups are defined in YAML (see [BINDINGS.md](BINDINGS.md)), with AppleScript actions supported.
 

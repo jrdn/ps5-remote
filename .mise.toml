@@ -82,3 +82,8 @@ run = "mise run run"
 sources = ["*.swift"]
 
 
+
+[tasks.debug]
+description = "Run with HID event logging"
+run = "./ps5-remote --debug --config bindings.yaml"
+depends = ["build"]
